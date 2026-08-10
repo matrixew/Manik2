@@ -806,10 +806,12 @@
         if (tabId === 'tabMasterCalendar') loadMastersForSelect();
         if (tabId === 'tabStats') loadStats();
         if (tabId === 'tabRevenue') loadRevenue();
+        if (tabId === 'tabQuickBook') loadAdminServicesAndMasters();
         if (tabId === 'tabServicesMasters') loadAdminServicesAndMasters();
         if (tabId === 'tabPromos') loadAdminPromos();
         if (tabId === 'tabReviews') loadAdminReviews();
     }
+
 
     function exportCSV() {
         if (!allBookingsData || allBookingsData.length === 0) {
@@ -1407,8 +1409,9 @@
     // ИНИЦИАЛИЗАЦИЯ
     // ========================================
     async function loadAdminServicesAndMasters() {
-        var srvs = await fetchData('/api/services');
-        var msts = await fetchData('/api/masters');
+        var srvs = await fetchData('/api/admin/services');
+        var msts = await fetchData('/api/admin/masters');
+
         
         var srvListEl = document.getElementById('servicesManagerList');
         if (srvListEl && srvs) {

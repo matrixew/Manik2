@@ -221,6 +221,85 @@
         .home-hero .btn { display: inline-block; padding: 13px 32px; background: var(--accent); color: #fff; text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 0.95rem; transition: all var(--transition); }
         .home-hero .btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
 
+        /* ===== ПОЛНОШИРИННЫЕ БАННЕРЫ ===== */
+        .full-banner-hero {
+            position: relative;
+            width: 100%;
+            min-height: 440px;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 24px;
+            margin-bottom: 40px;
+            overflow: hidden;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+        }
+
+        .full-banner-hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.35) 0%, rgba(15, 23, 42, 0.7) 100%);
+            z-index: 1;
+        }
+
+        .banner-glass-content {
+            position: relative;
+            z-index: 2;
+            max-width: 620px;
+            text-align: center;
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 20px;
+            padding: 36px 28px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .banner-glass-content h1, .banner-glass-content h2 {
+            color: #ffffff !important;
+            font-size: 2.2rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            margin-bottom: 14px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .banner-glass-content p {
+            color: rgba(255, 255, 255, 0.92) !important;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .banner-glass-btn {
+            display: inline-block;
+            padding: 13px 32px;
+            background: var(--accent);
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 0.92rem;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .banner-glass-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+
         .about-home { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; padding: 48px 0; border-top: 1px solid var(--border-light); }
         .about-home-item h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 8px; }
         .about-home-item p { color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; }
@@ -1130,11 +1209,14 @@
         <!-- ===== HOME ===== -->
         <section class="page active" id="page-home">
             <div class="container">
-                <div class="home-hero">
-                    <h1>Студия маникюра<br />BotProk</h1>
-                    <p>Профессиональный уход за вашими руками. Качественные материалы, уютная атмосфера и опытные мастера.</p>
-                    <a href="#" class="btn" onclick="navigateTo('booking')">Записаться</a>
+                <div class="full-banner-hero" style="background-image: url('/static/hero_banner.jpg');">
+                    <div class="banner-glass-content">
+                        <h1>Студия маникюра BotProk</h1>
+                        <p>Профессиональный уход за вашими руками, атмосфера уюта и безупречное мастерство.</p>
+                        <a href="#" class="banner-glass-btn" onclick="navigateTo('booking')">Записаться онлайн</a>
+                    </div>
                 </div>
+
                 <div class="about-home">
                     <div class="about-home-item">
                         <h3>Профессиональные мастера</h3>
@@ -1146,7 +1228,7 @@
                     </div>
                     <div class="about-home-item">
                         <h3>Удобное расположение</h3>
-                        <p>Мы находимся в центре Нальчика. Для клиентов есть удобная парковка.</p>
+                        <p>Мы находимся в центре города. Для клиентов есть удобная парковка.</p>
                     </div>
                 </div>
 
@@ -1161,9 +1243,12 @@
         <!-- ===== SERVICES ===== -->
         <section class="page" id="page-services">
             <div class="container">
-                <div class="page-header">
-                    <h2>Услуги и цены</h2>
-                    <p>Все процедуры выполняются с использованием профессиональных материалов.</p>
+                <div class="full-banner-hero" style="background-image: url('/static/services_banner.jpg'); margin-bottom: 32px;">
+                    <div class="banner-glass-content">
+                        <h2>Услуги и Прайс-лист</h2>
+                        <p>Аппаратный маникюр, гелевое покрытие, авторский дизайн и процедура глубокого ухода.</p>
+                        <a href="#" class="banner-glass-btn" onclick="navigateTo('booking')">Выбрать услугу</a>
+                    </div>
                 </div>
                 <div class="card-grid" id="servicesList"></div>
             </div>
@@ -1183,10 +1268,13 @@
         <!-- ===== ABOUT ===== -->
         <section class="page" id="page-about">
             <div class="container">
-                <div class="page-header">
-                    <h2>О нас</h2>
-                    <p>Узнайте больше о нашей студии и найдите нас на карте.</p>
+                <div class="full-banner-hero" style="background-image: url('/static/interior_banner.jpg'); margin-bottom: 32px;">
+                    <div class="banner-glass-content">
+                        <h2>Атмосфера нашей студии</h2>
+                        <p>Стерильность по стандартам СанПиН, современное оборудование и максимальный комфорт.</p>
+                    </div>
                 </div>
+
                 <div class="about-us-content">
                     <div class="about-us-text">
                         <div class="feature">

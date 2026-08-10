@@ -18,8 +18,9 @@ from aiogram.filters import Command
 from aiogram.types import (
     InlineKeyboardMarkup, InlineKeyboardButton,
     ReplyKeyboardMarkup, KeyboardButton,
-    BotCommand, WebAppInfo
+    BotCommand, WebAppInfo, MenuButtonWebApp
 )
+
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.client.default import DefaultBotProperties
 from dotenv import load_dotenv
@@ -1475,7 +1476,7 @@ def get_master_selection_keyboard():
 
 def get_client_keyboard():
     buttons = [
-        [KeyboardButton(text="Записаться онлайн", web_app=WebAppInfo(url=SITE_URL))],
+        [KeyboardButton(text="Онлайн запись", web_app=WebAppInfo(url=SITE_URL))],
         [KeyboardButton(text="О нас"), KeyboardButton(text="Ссылка на сайт")]
     ]
     return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)
@@ -1505,7 +1506,7 @@ async def cmd_start(message: types.Message):
     else:
         await message.answer(
             f"Добро пожаловать в студию маникюра {SALON_NAME}!\n\n"
-            "Нажмите «Записаться онлайн», чтобы выбрать услугу, мастера и время прямо в Telegram!",
+            "Нажмите «Онлайн запись», чтобы выбрать услугу, мастера и время прямо в Telegram!",
             reply_markup=get_client_keyboard()
         )
 
@@ -1524,7 +1525,7 @@ async def show_about_us(message: types.Message):
         reply_markup=get_client_keyboard()
     )
 
-@dp.message(F.text.in_(["Записаться онлайн", "Записаться", "💅 Записаться онлайн"]))
+@dp.message(F.text.in_(["Онлайн запись", "Записаться онлайн", "Записаться"]))
 async def show_booking_link(message: types.Message):
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Записаться (WebApp)", web_app=WebAppInfo(url=SITE_URL))],
@@ -1535,14 +1536,15 @@ async def show_booking_link(message: types.Message):
         reply_markup=keyboard
     )
 
-@dp.message(F.text.in_(["Админ-панель", "🔒 Админ-панель"]))
+
+@dp.message(F.text == "Админ-панель")
 async def show_admin_panel_cmd(message: types.Message):
     if not is_admin_user(message.from_user.id):
         await message.answer("У вас нет доступа к админ-панели.", reply_markup=get_client_keyboard())
         return
     await message.answer("Панель администратора:", reply_markup=get_main_keyboard())
 
-@dp.message(F.text.in_(["Ссылка на сайт", "🌐 Ссылка на сайт"]))
+@dp.message(F.text == "Ссылка на сайт")
 async def show_site_link(message: types.Message):
     await message.answer(
         f"Сайт для записи клиентов:\n\n"
@@ -1550,6 +1552,7 @@ async def show_site_link(message: types.Message):
         f"Все записи с сайта автоматически синхронизируются.",
         reply_markup=get_main_keyboard() if is_admin_user(message.from_user.id) else get_client_keyboard()
     )
+
 
 
 
@@ -1980,12 +1983,20 @@ def run_bot():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     async def start_bot():
-        await bot.set_my_commands([
-            BotCommand(command="start", description="Открыть админ-панель")
-        ])
-        logger.info("Бот админ-панели запущен!")
+        try:
+            await bot.set_my_commands([
+                BotCommand(command="start", description="Главное меню")
+            ])
+            await bot.set_chat_menu_button(
+                menu_button=MenuButtonWebApp(text="Записаться онлайн", web_app=WebAppInfo(url=SITE_URL))
+            )
+        except Exception as e:
+            logger.error(f"Error setting bot commands/menu: {e}")
+            
+        logger.info("Бот онлайн-записи запущен!")
         await dp.start_polling(bot, handle_signals=False)
     loop.run_until_complete(start_bot())
+
 
 if __name__ == '__main__':
     repair_bookings_file()
