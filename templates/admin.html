@@ -721,8 +721,105 @@
             </div>
             <div id="deleteMessage"></div>
         </div>
+
+        <div class="tab-content" id="tabQuickBook">
+            <div class="section-header">
+                <h2>Быстрая ручная запись</h2>
+                <span class="sub">Запись клиента по телефону или личного визита</span>
+            </div>
+            <div style="max-width: 500px; margin: 0 auto; background: var(--surface); padding: 20px; border-radius: var(--radius); border: 1px solid var(--border-light);">
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:4px;">Имя клиента</label>
+                    <input type="text" id="qbName" placeholder="Анна" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:6px; font-family:'Inter';">
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:4px;">Телефон клиента</label>
+                    <input type="text" id="qbPhone" placeholder="+7 (900) 000-00-00" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:6px; font-family:'Inter';">
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:4px;">Услуга</label>
+                    <select id="qbService" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:6px; font-family:'Inter';"></select>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:4px;">Мастер</label>
+                    <select id="qbMaster" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:6px; font-family:'Inter';"></select>
+                </div>
+                <div style="margin-bottom: 12px; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:4px;">Дата</label>
+                        <input type="date" id="qbDate" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:6px; font-family:'Inter';">
+                    </div>
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:4px;">Время</label>
+                        <input type="time" id="qbTime" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:6px; font-family:'Inter';">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="submitQuickBook()" style="width:100%; padding:10px; margin-top:8px;">Создать запись</button>
+                <div id="qbStatus" style="margin-top:10px; font-size:0.85rem; text-align:center;"></div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tabServicesMasters">
+            <div class="section-header">
+                <h2>Прайс-лист и Мастера</h2>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <div>
+                    <h3 style="font-size:0.95rem; margin-bottom:12px;">Услуги</h3>
+                    <div id="servicesManagerList" style="margin-bottom:16px;"></div>
+                    <div style="background:var(--bg); padding:12px; border-radius:6px; border:1px solid var(--border-light);">
+                        <h4 style="font-size:0.85rem; margin-bottom:8px;">Добавить / изменить услугу</h4>
+                        <input type="text" id="srvName" placeholder="Название услуги" style="width:100%; margin-bottom:8px; padding:6px 10px; border:1px solid var(--border); border-radius:4px;">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+                            <input type="number" id="srvPrice" placeholder="Цена (руб)" style="padding:6px 10px; border:1px solid var(--border); border-radius:4px;">
+                            <input type="text" id="srvDuration" placeholder="Длительность (60 мин)" style="padding:6px 10px; border:1px solid var(--border); border-radius:4px;">
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="saveAdminService()">Сохранить услугу</button>
+                    </div>
+                </div>
+                <div>
+                    <h3 style="font-size:0.95rem; margin-bottom:12px;">Мастера</h3>
+                    <div id="mastersManagerList" style="margin-bottom:16px;"></div>
+                    <div style="background:var(--bg); padding:12px; border-radius:6px; border:1px solid var(--border-light);">
+                        <h4 style="font-size:0.85rem; margin-bottom:8px;">Добавить мастера</h4>
+                        <input type="text" id="mstName" placeholder="ФИО мастера" style="width:100%; margin-bottom:8px; padding:6px 10px; border:1px solid var(--border); border-radius:4px;">
+                        <input type="text" id="mstExp" placeholder="Опыт (например: 5 лет)" style="width:100%; margin-bottom:8px; padding:6px 10px; border:1px solid var(--border); border-radius:4px;">
+                        <button class="btn btn-primary btn-sm" onclick="saveAdminMaster()">Сохранить мастера</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tabPromos">
+            <div class="section-header">
+                <h2>Промокоды</h2>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <div id="promosManagerList"></div>
+                <div style="background:var(--bg); padding:16px; border-radius:6px; border:1px solid var(--border-light); height:fit-content;">
+                    <h3 style="font-size:0.9rem; margin-bottom:12px;">Создать промокод</h3>
+                    <input type="text" id="prmCode" placeholder="Код (например: SUMMER15)" style="width:100%; margin-bottom:8px; padding:8px 10px; border:1px solid var(--border); border-radius:4px; text-transform:uppercase;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+                        <select id="prmType" style="padding:8px 10px; border:1px solid var(--border); border-radius:4px;">
+                            <option value="percent">Процент (%)</option>
+                            <option value="fixed">Сумма (руб)</option>
+                        </select>
+                        <input type="number" id="prmVal" placeholder="Значение (10 или 500)" style="padding:8px 10px; border:1px solid var(--border); border-radius:4px;">
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="saveAdminPromo()">Создать промокод</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tabReviews">
+            <div class="section-header">
+                <h2>Отзывы клиентов</h2>
+            </div>
+            <div id="reviewsManagerList"></div>
+        </div>
     </div>
 </div>
+
 
 <script>
     // ========================================

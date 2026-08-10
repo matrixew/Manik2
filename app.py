@@ -1496,10 +1496,11 @@ def get_master_selection_keyboard():
 
 def get_client_keyboard():
     buttons = [
-        [KeyboardButton(text="Онлайн запись", web_app=WebAppInfo(url=SITE_URL))],
+        [KeyboardButton(text="Онлайн запись")],
         [KeyboardButton(text="О нас"), KeyboardButton(text="Ссылка на сайт")]
     ]
     return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)
+
 
 
 # ===== ОБРАБОТЧИКИ КОМАНД =====
