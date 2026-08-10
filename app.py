@@ -21,6 +21,7 @@ from aiogram.types import (
     BotCommand
 )
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.client.default import DefaultBotProperties
 from dotenv import load_dotenv
 
 load_dotenv()
