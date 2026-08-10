@@ -49,8 +49,19 @@ REVIEWS_FILE = os.getenv('REVIEWS_FILE', os.path.join(BASE_DIR, 'reviews.json'))
 SERVICES_FILE = os.getenv('SERVICES_FILE', os.path.join(BASE_DIR, 'services.json'))
 MASTERS_FILE = os.getenv('MASTERS_FILE', os.path.join(BASE_DIR, 'masters.json'))
 
-SITE_URL = os.getenv('SITE_URL', 'http://BotProk.wisp.uno')
+def ensure_https(url):
+    if not url:
+        return "https://botprok.wisp.uno"
+    url = url.strip()
+    if url.startswith("http://"):
+        return "https://" + url[7:]
+    elif not url.startswith("https://"):
+        return "https://" + url
+    return url
+
+SITE_URL = ensure_https(os.getenv('SITE_URL', 'https://botprok.wisp.uno'))
 SALON_NAME = os.getenv('SALON_NAME', 'BotProk Nails')
+
 
 # ===== НАСТРОЙКА SMTP (Mail.ru) =====
 SMTP_HOST = os.getenv('SMTP_HOST', 'smtp.mail.ru')
@@ -1195,8 +1206,17 @@ def reset_password():
         logger.error(f"Ошибка смены пароля: {e}")
         return jsonify({'success': False, 'message': 'Ошибка сервера'}), 500
 
+@app.route('/static/icon-192.png')
+@app.route('/static/icon-512.png')
+def serve_pwa_icon():
+    try:
+        return send_from_directory('static', 'hero_banner.jpg')
+    except Exception:
+        return '', 200
+
 @app.route('/api/check_auth', methods=['GET'])
 def check_auth():
+
     try:
         user_id = session.get('user_id')
         if not user_id:

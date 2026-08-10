@@ -1209,13 +1209,12 @@
         <!-- ===== HOME ===== -->
         <section class="page active" id="page-home">
             <div class="container">
-                <div class="full-banner-hero" style="background-image: url('/static/hero_banner.jpg');">
-                    <div class="banner-glass-content">
-                        <h1>Студия маникюра BotProk</h1>
-                        <p>Профессиональный уход за вашими руками, атмосфера уюта и безупречное мастерство.</p>
-                        <a href="#" class="banner-glass-btn" onclick="navigateTo('booking')">Записаться онлайн</a>
-                    </div>
+                <div class="home-hero">
+                    <h1>Студия маникюра<br />BotProk</h1>
+                    <p>Профессиональный уход за вашими руками. Качественные материалы, уютная атмосфера и опытные мастера.</p>
+                    <a href="#" class="btn" onclick="navigateTo('booking')">Записаться</a>
                 </div>
+
 
                 <div class="about-home">
                     <div class="about-home-item">
@@ -1393,14 +1392,8 @@
         <!-- ===== AUTH ===== -->
         <section class="page" id="page-auth">
             <div class="container">
-                <div class="page-header">
-                    <h2 id="authTitle">Регистрация</h2>
-                    <p id="authSubtitle">Создайте аккаунт для доступа к личному кабинету.</p>
-                </div>
                 <div class="auth-container">
                     <div class="form-card" id="formRegister">
-                        <h3>Создать аккаунт</h3>
-                        <p class="subtitle">Заполните все поля для регистрации</p>
                         <div class="form-group">
                             <label>Имя и фамилия</label>
                             <input type="text" id="regName" placeholder="Анна Соколова" />
@@ -1430,12 +1423,11 @@
                     </div>
 
                     <div class="form-card" id="formLogin" style="display:none;">
-                        <h3>Вход в аккаунт</h3>
-                        <p class="subtitle">Введите номер телефона или email и пароль</p>
                         <div class="form-group">
                             <label>Телефон или Email</label>
                             <input type="text" id="loginInput" placeholder="+7 999 989 87 79 или anna@mail.ru" />
                         </div>
+
                         <div class="form-group">
                             <label>Пароль</label>
                             <input type="password" id="loginPassword" placeholder="Введите пароль" />
@@ -1859,17 +1851,18 @@
 
             if (form === 'register') {
                 document.getElementById('formRegister').style.display = 'block';
-                document.getElementById('authTitle').textContent = 'Регистрация';
-                document.getElementById('authSubtitle').textContent = 'Создайте аккаунт для доступа к личному кабинету.';
+                var t = document.getElementById('authTitle'); if (t) t.textContent = 'Регистрация';
+                var s = document.getElementById('authSubtitle'); if (s) s.textContent = 'Создайте аккаунт для доступа к личному кабинету.';
             } else if (form === 'login') {
                 document.getElementById('formLogin').style.display = 'block';
-                document.getElementById('authTitle').textContent = 'Вход';
-                document.getElementById('authSubtitle').textContent = 'Войдите в свой аккаунт.';
+                var t = document.getElementById('authTitle'); if (t) t.textContent = 'Вход';
+                var s = document.getElementById('authSubtitle'); if (s) s.textContent = 'Войдите в свой аккаунт.';
             } else if (form === 'forgot') {
                 document.getElementById('formForgot').style.display = 'block';
-                document.getElementById('authTitle').textContent = 'Восстановление пароля';
-                document.getElementById('authSubtitle').textContent = 'Мы отправим код подтверждения на ваш email.';
+                var t = document.getElementById('authTitle'); if (t) t.textContent = 'Восстановление пароля';
+                var s = document.getElementById('authSubtitle'); if (s) s.textContent = 'Мы отправим код подтверждения на ваш email.';
             }
+
         }
 
         async function register() {
