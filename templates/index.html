@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>BotProk — Студия маникюра</title>
     
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="manifest" href="/manifest.json" />
+
     <meta name="theme-color" content="#1A1A1A" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
@@ -2530,7 +2532,17 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            if (window.Telegram && window.Telegram.WebApp) {
+                try {
+                    window.Telegram.WebApp.ready();
+                    window.Telegram.WebApp.expand();
+                } catch(e) {
+                    console.log('Telegram WebApp init:', e);
+                }
+            }
+
             renderServicesPage();
+
             renderMastersPage();
             renderServiceOptions();
             renderMasterOptions();

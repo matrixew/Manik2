@@ -1206,9 +1206,17 @@ def reset_password():
         logger.error(f"Ошибка смены пароля: {e}")
         return jsonify({'success': False, 'message': 'Ошибка сервера'}), 500
 
+@app.after_request
+def allow_telegram_iframe(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers.pop('X-Frame-Options', None)
+    response.headers['Content-Security-Policy'] = "frame-ancestors 'self' https://web.telegram.org https://*.telegram.org https://*.t.me https://telegram.org"
+    return response
+
 @app.route('/static/icon-192.png')
 @app.route('/static/icon-512.png')
 def serve_pwa_icon():
+
     try:
         return send_from_directory('static', 'hero_banner.jpg')
     except Exception:
