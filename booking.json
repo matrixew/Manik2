@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "name": "Анна",
+    "phone": "+79287152552",
+    "client_name": "Анна",
+    "client_phone": "+79287152552",
+    "service": "Классический маникюр",
+    "master": "Анна Соколова",
+    "master_id": "anna",
+    "date": "2026-06-29",
+    "time": "10:00",
+    "price": 1500,
+    "status": "completed",
+    "created_at": "2026-06-29 09:00:00"
+  },
+  {
+    "id": 2,
+    "name": "Анна",
+    "phone": "+79287158986",
+    "client_name": "Анна",
+    "client_phone": "+79287158986",
+    "service": "Классический маникюр",
+    "master": "Анна Соколова",
+    "master_id": "anna",
+    "date": "2026-06-29",
+    "time": "12:00",
+    "price": 1500,
+    "status": "completed",
+    "created_at": "2026-06-29 11:00:00"
+  },
+  {
+    "id": 3,
+    "name": "Ислам",
+    "phone": "+79287149723",
+    "client_name": "Ислам",
+    "client_phone": "+79287149723",
+    "service": "Классический маникюр",
+    "master": "Анна Соколова",
+    "master_id": "anna",
+    "date": "2026-06-29",
+    "time": "14:00",
+    "price": 1500,
+    "status": "completed",
+    "created_at": "2026-06-29 13:00:00"
+  },
+  {
+    "id": 4,
+    "name": "Ислам Джомарт",
+    "phone": "+79287149723",
+    "client_name": "Ислам Джомарт",
+    "client_phone": "+79287149723",
+    "service": "Классический маникюр",
+    "master": "Анна Соколова",
+    "master_id": "anna",
+    "date": "2026-06-30",
+    "time": "14:00",
+    "price": 1500,
+    "status": "completed",
+    "created_at": "2026-06-30 13:00:00"
+  }
+]
