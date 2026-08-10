@@ -18,7 +18,7 @@ from aiogram.filters import Command
 from aiogram.types import (
     InlineKeyboardMarkup, InlineKeyboardButton,
     ReplyKeyboardMarkup, KeyboardButton,
-    BotCommand
+    BotCommand, WebAppInfo
 )
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.client.default import DefaultBotProperties
@@ -37,6 +37,11 @@ TELEGRAM_CHAT_ID = int(os.getenv('TELEGRAM_CHAT_ID', '1922216067'))
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BOOKINGS_FILE = os.getenv('BOOKINGS_FILE', os.path.join(BASE_DIR, 'booking.json'))
 USERS_FILE = os.getenv('USERS_FILE', os.path.join(BASE_DIR, 'users.json'))
+PROMOS_FILE = os.getenv('PROMOS_FILE', os.path.join(BASE_DIR, 'promos.json'))
+REVIEWS_FILE = os.getenv('REVIEWS_FILE', os.path.join(BASE_DIR, 'reviews.json'))
+SERVICES_FILE = os.getenv('SERVICES_FILE', os.path.join(BASE_DIR, 'services.json'))
+MASTERS_FILE = os.getenv('MASTERS_FILE', os.path.join(BASE_DIR, 'masters.json'))
+
 SITE_URL = os.getenv('SITE_URL', 'http://BotProk.wisp.uno')
 SALON_NAME = os.getenv('SALON_NAME', 'BotProk Nails')
 
@@ -65,6 +70,78 @@ MASTERS = [
     {'id': 'daria', 'name': 'Дарья Кузнецова', 'experience': '4 года'},
     {'id': 'elena', 'name': 'Елена Смирнова', 'experience': '6 лет'}
 ]
+
+def load_services_data():
+    if os.path.exists(SERVICES_FILE):
+        try:
+            with open(SERVICES_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            pass
+    save_services_data(SERVICES)
+    return SERVICES
+
+def save_services_data(services):
+    try:
+        with open(SERVICES_FILE, 'w', encoding='utf-8') as f:
+            json.dump(services, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"Ошибка сохранения услуг: {e}")
+
+def load_masters_data():
+    if os.path.exists(MASTERS_FILE):
+        try:
+            with open(MASTERS_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            pass
+    save_masters_data(MASTERS)
+    return MASTERS
+
+def save_masters_data(masters):
+    try:
+        with open(MASTERS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(masters, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"Ошибка сохранения мастеров: {e}")
+
+def load_promos():
+    if os.path.exists(PROMOS_FILE):
+        try:
+            with open(PROMOS_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            pass
+    default_promos = [
+        {'code': 'FIRST10', 'discount_type': 'percent', 'discount_value': 10, 'active': True},
+        {'code': 'WELCOME500', 'discount_type': 'fixed', 'discount_value': 500, 'active': True}
+    ]
+    save_promos(default_promos)
+    return default_promos
+
+def save_promos(promos):
+    try:
+        with open(PROMOS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(promos, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"Ошибка сохранения промокодов: {e}")
+
+def load_reviews():
+    if os.path.exists(REVIEWS_FILE):
+        try:
+            with open(REVIEWS_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return []
+
+def save_reviews(reviews):
+    try:
+        with open(REVIEWS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(reviews, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"Ошибка сохранения отзывов: {e}")
+
 
 AVAILABLE_TIMES = [f"{h:02d}:00" for h in range(10, 21)]
 
@@ -599,11 +676,11 @@ def admin_page():
 
 @app.route('/api/services')
 def get_services():
-    return jsonify(SERVICES)
+    return jsonify(load_services_data())
 
 @app.route('/api/masters')
 def get_masters():
-    return jsonify(MASTERS)
+    return jsonify(load_masters_data())
 
 @app.route('/api/times')
 def get_times():
@@ -737,6 +814,185 @@ def my_bookings():
     except Exception as e:
         logger.error(f"Ошибка получения записей: {e}")
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/promo/apply', methods=['POST'])
+def apply_promo():
+    try:
+        data = request.json or {}
+        code = data.get('code', '').strip().upper()
+        total = float(data.get('total', 0))
+        
+        promos = load_promos()
+        promo = next((p for p in promos if p.get('code') == code and p.get('active')), None)
+        
+        if not promo:
+            return jsonify({'success': False, 'message': 'Недействительный промокод'}), 400
+            
+        discount = 0
+        if promo.get('discount_type') == 'percent':
+            discount = round(total * (promo.get('discount_value', 0) / 100.0), 2)
+        elif promo.get('discount_type') == 'fixed':
+            discount = float(promo.get('discount_value', 0))
+            
+        discount = min(discount, total)
+        final_total = max(0, total - discount)
+        
+        return jsonify({
+            'success': True,
+            'code': code,
+            'discount': discount,
+            'final_total': final_total,
+            'message': f'Промокод {code} применен!'
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': 'Ошибка применения промокода'}), 500
+
+@app.route('/api/reviews/add', methods=['POST'])
+def add_review():
+    try:
+        data = request.json or {}
+        master = data.get('master')
+        rating = int(data.get('rating', 5))
+        comment = data.get('comment', '').strip()
+        client_name = data.get('client_name', 'Клиент')
+        booking_id = data.get('booking_id')
+        
+        if not master or not comment:
+            return jsonify({'success': False, 'message': 'Укажите мастера и текст отзыва'}), 400
+            
+        reviews = load_reviews()
+        new_review = {
+            'id': str(uuid.uuid4()),
+            'booking_id': booking_id,
+            'master': master,
+            'client_name': client_name,
+            'rating': rating,
+            'comment': comment,
+            'status': 'approved',
+            'date': datetime.now().strftime('%Y-%m-%d %H:%M')
+        }
+        reviews.append(new_review)
+        save_reviews(reviews)
+        return jsonify({'success': True, 'message': 'Спасибо за ваш отзыв!'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/reviews/list', methods=['GET'])
+def list_reviews():
+    reviews = load_reviews()
+    approved = [r for r in reviews if r.get('status') == 'approved']
+    
+    master_ratings = {}
+    for r in approved:
+        m = r.get('master')
+        if m:
+            if m not in master_ratings:
+                master_ratings[m] = {'sum': 0, 'count': 0}
+            master_ratings[m]['sum'] += r.get('rating', 5)
+            master_ratings[m]['count'] += 1
+            
+    averages = {}
+    for m, d in master_ratings.items():
+        averages[m] = round(d['sum'] / d['count'], 1) if d['count'] > 0 else 5.0
+        
+    return jsonify({
+        'reviews': approved,
+        'master_ratings': averages
+    })
+
+@app.route('/api/admin/services', methods=['GET', 'POST', 'DELETE'])
+def admin_services():
+    services = load_services_data()
+    if request.method == 'GET':
+        return jsonify(services)
+    elif request.method == 'POST':
+        data = request.json or {}
+        srv_id = data.get('id') or str(uuid.uuid4())
+        data['id'] = srv_id
+        data['price_num'] = int(data.get('price_num', 0))
+        existing = next((s for s in services if s['id'] == srv_id), None)
+        if existing:
+            existing.update(data)
+        else:
+            services.append(data)
+        save_services_data(services)
+        return jsonify({'success': True, 'services': services})
+    elif request.method == 'DELETE':
+        srv_id = request.args.get('id')
+        services = [s for s in services if s['id'] != srv_id]
+        save_services_data(services)
+        return jsonify({'success': True, 'services': services})
+
+@app.route('/api/admin/masters', methods=['GET', 'POST', 'DELETE'])
+def admin_masters():
+    masters = load_masters_data()
+    if request.method == 'GET':
+        return jsonify(masters)
+    elif request.method == 'POST':
+        data = request.json or {}
+        m_id = data.get('id') or str(uuid.uuid4())
+        data['id'] = m_id
+        existing = next((m for m in masters if m['id'] == m_id), None)
+        if existing:
+            existing.update(data)
+        else:
+            masters.append(data)
+        save_masters_data(masters)
+        return jsonify({'success': True, 'masters': masters})
+    elif request.method == 'DELETE':
+        m_id = request.args.get('id')
+        masters = [m for m in masters if m['id'] != m_id]
+        save_masters_data(masters)
+        return jsonify({'success': True, 'masters': masters})
+
+@app.route('/api/admin/promos', methods=['GET', 'POST', 'DELETE'])
+def admin_promos():
+    promos = load_promos()
+    if request.method == 'GET':
+        return jsonify(promos)
+    elif request.method == 'POST':
+        data = request.json or {}
+        code = data.get('code', '').strip().upper()
+        if not code:
+            return jsonify({'success': False, 'message': 'Укажите промокод'}), 400
+        existing = next((p for p in promos if p['code'] == code), None)
+        if existing:
+            existing.update(data)
+        else:
+            promos.append(data)
+        save_promos(promos)
+        return jsonify({'success': True, 'promos': promos})
+    elif request.method == 'DELETE':
+        code = request.args.get('code')
+        promos = [p for p in promos if p['code'] != code]
+        save_promos(promos)
+        return jsonify({'success': True, 'promos': promos})
+
+@app.route('/api/admin/reviews/status', methods=['POST'])
+def admin_review_status():
+    try:
+        data = request.json or {}
+        review_id = data.get('id')
+        status = data.get('status', 'approved')
+        reviews = load_reviews()
+        for r in reviews:
+            if r.get('id') == review_id:
+                r['status'] = status
+                break
+        save_reviews(reviews)
+        return jsonify({'success': True, 'reviews': reviews})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/admin/quick_book', methods=['POST'])
+def admin_quick_book():
+    try:
+        data = request.json or {}
+        booking_id = add_booking(data)
+        return jsonify({'success': True, 'id': booking_id, 'message': 'Запись успешно добавлена!'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 
 # ============================================
 # АВТОРИЗАЦИЯ И РЕГИСТРАЦИЯ
@@ -1211,43 +1467,85 @@ def get_master_selection_keyboard():
     ])
     return keyboard
 
+def get_client_keyboard():
+    buttons = [
+        [KeyboardButton(text="Записаться онлайн", web_app=WebAppInfo(url=SITE_URL))],
+        [KeyboardButton(text="О нас"), KeyboardButton(text="Ссылка на сайт")]
+    ]
+    return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)
+
+
 # ===== ОБРАБОТЧИКИ КОМАНД =====
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
-    if message.from_user.id != TELEGRAM_CHAT_ID:
-        await message.answer("У вас нет доступа к этой панели.")
-        return
-    
     user_state[message.from_user.id] = {'page': 'main'}
-    
+    if message.from_user.id == TELEGRAM_CHAT_ID:
+        await message.answer(
+            f"Админ-панель {SALON_NAME}\n\n"
+            "Выберите действие:\n\n"
+            "Сегодня/Завтра — записи на ближайшие дни\n"
+            "Календарь — общий календарь записей\n"
+            "Календарь мастера — записи конкретного мастера\n"
+            "Статистика — статистика за 30 дней\n"
+            "Статистика по мастерам — нагрузка на мастеров\n"
+            "Выручка — финансовая аналитика\n"
+            "Все записи — полный список\n"
+            "Удалить запись — удаление по ID\n"
+            "Удалить все записи — полная очистка\n"
+            "Ссылка на сайт — ссылка для клиентов",
+            reply_markup=get_main_keyboard()
+        )
+    else:
+        await message.answer(
+            f"Добро пожаловать в студию маникюра {SALON_NAME}!\n\n"
+            "Нажмите «Записаться онлайн», чтобы выбрать услугу, мастера и время прямо в Telegram!",
+            reply_markup=get_client_keyboard()
+        )
+
+@dp.message(lambda message: message.text == "О нас")
+async def show_about_us(message: types.Message):
     await message.answer(
-        f"Админ-панель {SALON_NAME}\n\n"
-        "Выберите действие:\n\n"
-        "Сегодня/Завтра — записи на ближайшие дни\n"
-        "Календарь — общий календарь записей\n"
-        "Календарь мастера — записи конкретного мастера\n"
-        "Статистика — статистика за 30 дней\n"
-        "Статистика по мастерам — нагрузка на мастеров\n"
-        "Выручка — финансовая аналитика\n"
-        "Все записи — полный список\n"
-        "Удалить запись — удаление по ID\n"
-        "Удалить все записи — полная очистка\n"
-        "Ссылка на сайт — ссылка для клиентов",
-        reply_markup=get_main_keyboard()
+        f"Студия маникюра {SALON_NAME}\n\n"
+        "Мы предлагаем премиальный уход за ногтями:\n"
+        "• Классический и аппаратный маникюр\n"
+        "• Гель-лак и дизайн любой сложности\n"
+        "• Педикюр и SPA-уход\n\n"
+        "Адрес: ул. Примерная, 10\n"
+        "Режим работы: Ежедневно с 10:00 до 21:00\n"
+        "Телефон: +7 (900) 000-00-00\n\n"
+        f"Записаться онлайн: {SITE_URL}",
+        reply_markup=get_client_keyboard()
     )
+
+@dp.message(lambda message: message.text in ["Записаться онлайн", "Записаться"])
+async def show_booking_link(message: types.Message):
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Записаться (WebApp)", web_app=WebAppInfo(url=SITE_URL))],
+        [InlineKeyboardButton(text="Открыть в браузере", url=SITE_URL)]
+    ])
+    await message.answer(
+        "Нажмите кнопку ниже для онлайн-записи:",
+        reply_markup=keyboard
+    )
+
+@dp.message(lambda message: message.text == "Админ-панель")
+async def show_admin_panel_cmd(message: types.Message):
+    if message.from_user.id != TELEGRAM_CHAT_ID:
+        await message.answer("У вас нет доступа к админ-панели.", reply_markup=get_client_keyboard())
+        return
+    await message.answer("Панель администратора:", reply_markup=get_main_keyboard())
 
 @dp.message(lambda message: message.text == "Ссылка на сайт")
 async def show_site_link(message: types.Message):
-    if message.from_user.id != TELEGRAM_CHAT_ID:
-        return
     await message.answer(
         f"Сайт для записи клиентов:\n\n"
         f"{SITE_URL}\n\n"
-        f"Отправьте эту ссылку клиентам для онлайн-записи.\n"
-        f"Все записи с сайта автоматически появятся в этом боте.",
-        reply_markup=get_main_keyboard()
+        f"Все записи с сайта автоматически синхронизируются.",
+        reply_markup=get_main_keyboard() if message.from_user.id == TELEGRAM_CHAT_ID else get_client_keyboard()
     )
+
+
 
 @dp.message(lambda message: message.text == "Сегодня")
 async def show_today(message: types.Message):
@@ -1689,4 +1987,4 @@ if __name__ == '__main__':
     bot_thread.start()
     logger.info("Бот запущен в фоновом потоке")
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(host='0.0.0.0', port=port, debug=False)

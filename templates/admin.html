@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -585,11 +586,15 @@
             <button class="tab-btn" data-tab="tabTomorrow" onclick="switchMainTab('tabTomorrow')">Завтра</button>
             <button class="tab-btn" data-tab="tabAll" onclick="switchMainTab('tabAll')">Все записи</button>
             <button class="tab-btn" data-tab="tabCalendar" onclick="switchMainTab('tabCalendar')">Календарь</button>
-            <button class="tab-btn" data-tab="tabMasterCalendar" onclick="switchMainTab('tabMasterCalendar')">Календарь мастера</button>
+            <button class="tab-btn" data-tab="tabQuickBook" onclick="switchMainTab('tabQuickBook')">Ручная запись</button>
+            <button class="tab-btn" data-tab="tabServicesMasters" onclick="switchMainTab('tabServicesMasters')">Прайс и Мастера</button>
+            <button class="tab-btn" data-tab="tabPromos" onclick="switchMainTab('tabPromos')">Промокоды</button>
+            <button class="tab-btn" data-tab="tabReviews" onclick="switchMainTab('tabReviews')">Отзывы</button>
             <button class="tab-btn" data-tab="tabStats" onclick="switchMainTab('tabStats')">Статистика</button>
             <button class="tab-btn" data-tab="tabRevenue" onclick="switchMainTab('tabRevenue')">Выручка</button>
             <button class="tab-btn" data-tab="tabDelete" onclick="switchMainTab('tabDelete')">Управление</button>
         </div>
+
 
         <div class="tab-content active" id="tabToday">
             <div class="section-header">
@@ -624,6 +629,7 @@
                 <button class="btn btn-secondary btn-sm" onclick="applyFilters()">Применить</button>
                 <button class="btn btn-secondary btn-sm" onclick="resetFilters()">Сбросить</button>
                 <button class="btn btn-primary btn-sm" onclick="loadAllBookings()">Обновить</button>
+                <button class="btn btn-secondary btn-sm" onclick="exportCSV()">Скачать CSV</button>
             </div>
             <div class="booking-list" id="allBookingsList">
                 <div class="empty-state">Загрузка...</div>
@@ -800,6 +806,28 @@
         if (tabId === 'tabMasterCalendar') loadMastersForSelect();
         if (tabId === 'tabStats') loadStats();
         if (tabId === 'tabRevenue') loadRevenue();
+        if (tabId === 'tabServicesMasters') loadAdminServicesAndMasters();
+        if (tabId === 'tabPromos') loadAdminPromos();
+        if (tabId === 'tabReviews') loadAdminReviews();
+    }
+
+    function exportCSV() {
+        if (!allBookingsData || allBookingsData.length === 0) {
+            alert('Нет данных для экспорта');
+            return;
+        }
+        var csvContent = "data:text/csv;charset=utf-8,ID,Имя,Телефон,Услуга,Мастер,Дата,Время,Цена,Статус\n";
+        allBookingsData.forEach(function(b) {
+            var row = [b.id, `"${b.client_name || b.name}"`, `"${b.client_phone || b.phone}"`, `"${b.service}"`, `"${b.master}"`, b.date, b.time, b.price, b.status].join(",");
+            csvContent += row + "\n";
+        });
+        var encodedUri = encodeURI(csvContent);
+        var link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "bookings_export.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 
     // ========================================
