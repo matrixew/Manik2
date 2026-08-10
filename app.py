@@ -1264,8 +1264,8 @@ def admin_bookings():
         bookings = get_all_bookings()
     return jsonify(bookings)
 
-@app.route('/api/admin/masters')
-def admin_masters():
+@app.route('/api/admin/masters_list')
+def admin_masters_list():
     return jsonify(get_masters_list())
 
 @app.route('/api/admin/delete', methods=['POST'])
