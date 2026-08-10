@@ -1779,13 +1779,15 @@ async def delete_all_bookings_start(message: types.Message):
         reply_markup=get_main_keyboard()
     )
 
-@dp.message()
+@dp.message(F.text.in_(["Да", "да", "Нет", "нет"]))
 async def handle_delete_all_confirmation(message: types.Message):
-    if message.from_user.id != TELEGRAM_CHAT_ID:
+    if not is_admin_user(message.from_user.id):
+        await message.answer("Для вызова меню нажмите 'Записаться онлайн'.", reply_markup=get_client_keyboard())
         return
     
     state = user_state.get(message.from_user.id, {})
     if state.get('page') != 'delete_all_confirm':
+        await message.answer("Панель администратора:", reply_markup=get_main_keyboard())
         return
     
     text = message.text.lower().strip()
@@ -1800,22 +1802,29 @@ async def handle_delete_all_confirmation(message: types.Message):
             )
         else:
             await message.answer(
-                f"Ошибка при удалении записей",
+                "Ошибка при удалении записей",
                 reply_markup=get_main_keyboard()
             )
-    elif text == "нет":
-        await message.answer(
-            f"Удаление всех записей отменено",
-            reply_markup=get_main_keyboard()
-        )
     else:
         await message.answer(
-            f"Пожалуйста, ответьте Да или Нет",
+            "Удаление всех записей отменено",
             reply_markup=get_main_keyboard()
         )
-        return
     
     user_state[message.from_user.id] = {'page': 'main'}
+
+@dp.message()
+async def default_fallback_handler(message: types.Message):
+    logger.info(f"Fallback handler received from {message.from_user.id}: {message.text}")
+    if is_admin_user(message.from_user.id):
+        await message.answer(f"Панель администратора {SALON_NAME}:", reply_markup=get_main_keyboard())
+    else:
+        await message.answer(
+            f"Добро пожаловать в студию маникюра {SALON_NAME}!\n\n"
+            "Нажмите «Записаться онлайн», чтобы выбрать услугу, мастера и время прямо в Telegram!",
+            reply_markup=get_client_keyboard()
+        )
+
 
 # ===== CALLBACK ОБРАБОТЧИКИ =====
 
