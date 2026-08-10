@@ -51,7 +51,7 @@ MASTERS_FILE = os.getenv('MASTERS_FILE', os.path.join(BASE_DIR, 'masters.json'))
 
 def ensure_https(url):
     if not url:
-        return "https://botprok.wisp.uno"
+        return ""
     url = url.strip()
     if url.startswith("http://"):
         return "https://" + url[7:]
@@ -59,8 +59,24 @@ def ensure_https(url):
         return "https://" + url
     return url
 
-SITE_URL = ensure_https(os.getenv('SITE_URL', 'https://botprok.wisp.uno'))
+def get_site_url():
+    env_url = os.getenv('SITE_URL', '').strip()
+    if env_url and 'botprok.wisp.uno' not in env_url:
+        return ensure_https(env_url)
+    
+    railway_domain = os.getenv('RAILWAY_STATIC_URL') or os.getenv('RAILWAY_PUBLIC_DOMAIN')
+    if railway_domain:
+        return ensure_https(railway_domain)
+        
+    if env_url:
+        return ensure_https(env_url)
+        
+    return "https://botprok.wisp.uno"
+
+
+SITE_URL = get_site_url()
 SALON_NAME = os.getenv('SALON_NAME', 'BotProk Nails')
+
 
 
 # ===== НАСТРОЙКА SMTP (Mail.ru) =====
