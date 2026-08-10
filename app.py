@@ -13,7 +13,7 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, jsonify, send_from_directory, session
 import requests
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
 from aiogram.types import (
     InlineKeyboardMarkup, InlineKeyboardButton,
@@ -33,6 +33,12 @@ logger = logging.getLogger(__name__)
 # ===== КОНФИГУРАЦИЯ =====
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '8968782590:AAGmY5PtCdsNg32iYxJetiFEwf9tFtB9iiA')
 TELEGRAM_CHAT_ID = int(os.getenv('TELEGRAM_CHAT_ID', '1922216067'))
+
+def is_admin_user(user_id):
+    try:
+        return str(user_id).strip() == str(TELEGRAM_CHAT_ID).strip()
+    except Exception:
+        return False
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BOOKINGS_FILE = os.getenv('BOOKINGS_FILE', os.path.join(BASE_DIR, 'booking.json'))
@@ -1480,7 +1486,7 @@ def get_client_keyboard():
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     user_state[message.from_user.id] = {'page': 'main'}
-    if message.from_user.id == TELEGRAM_CHAT_ID:
+    if is_admin_user(message.from_user.id):
         await message.answer(
             f"Админ-панель {SALON_NAME}\n\n"
             "Выберите действие:\n\n"
@@ -1503,7 +1509,7 @@ async def cmd_start(message: types.Message):
             reply_markup=get_client_keyboard()
         )
 
-@dp.message(lambda message: message.text == "О нас")
+@dp.message(F.text.in_(["О нас", "ℹ️ О нас"]))
 async def show_about_us(message: types.Message):
     await message.answer(
         f"Студия маникюра {SALON_NAME}\n\n"
@@ -1518,7 +1524,7 @@ async def show_about_us(message: types.Message):
         reply_markup=get_client_keyboard()
     )
 
-@dp.message(lambda message: message.text in ["Записаться онлайн", "Записаться"])
+@dp.message(F.text.in_(["Записаться онлайн", "Записаться", "💅 Записаться онлайн"]))
 async def show_booking_link(message: types.Message):
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Записаться (WebApp)", web_app=WebAppInfo(url=SITE_URL))],
@@ -1529,21 +1535,22 @@ async def show_booking_link(message: types.Message):
         reply_markup=keyboard
     )
 
-@dp.message(lambda message: message.text == "Админ-панель")
+@dp.message(F.text.in_(["Админ-панель", "🔒 Админ-панель"]))
 async def show_admin_panel_cmd(message: types.Message):
-    if message.from_user.id != TELEGRAM_CHAT_ID:
+    if not is_admin_user(message.from_user.id):
         await message.answer("У вас нет доступа к админ-панели.", reply_markup=get_client_keyboard())
         return
     await message.answer("Панель администратора:", reply_markup=get_main_keyboard())
 
-@dp.message(lambda message: message.text == "Ссылка на сайт")
+@dp.message(F.text.in_(["Ссылка на сайт", "🌐 Ссылка на сайт"]))
 async def show_site_link(message: types.Message):
     await message.answer(
         f"Сайт для записи клиентов:\n\n"
         f"{SITE_URL}\n\n"
         f"Все записи с сайта автоматически синхронизируются.",
-        reply_markup=get_main_keyboard() if message.from_user.id == TELEGRAM_CHAT_ID else get_client_keyboard()
+        reply_markup=get_main_keyboard() if is_admin_user(message.from_user.id) else get_client_keyboard()
     )
+
 
 
 

@@ -1406,6 +1406,185 @@
     // ========================================
     // ИНИЦИАЛИЗАЦИЯ
     // ========================================
+    async function loadAdminServicesAndMasters() {
+        var srvs = await fetchData('/api/services');
+        var msts = await fetchData('/api/masters');
+        
+        var srvListEl = document.getElementById('servicesManagerList');
+        if (srvListEl && srvs) {
+            var html = '';
+            srvs.forEach(function(s) {
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px; border-bottom:1px solid var(--border-light);">
+                    <div><strong>${s.name}</strong> — ${s.price} (${s.duration})</div>
+                    <button class="btn btn-danger btn-sm" onclick="deleteAdminService('${s.id}')">Удалить</button>
+                </div>`;
+            });
+            srvListEl.innerHTML = html || '<div class="empty-state">Нет услуг</div>';
+        }
+        
+        var mstListEl = document.getElementById('mastersManagerList');
+        if (mstListEl && msts) {
+            var html = '';
+            msts.forEach(function(m) {
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px; border-bottom:1px solid var(--border-light);">
+                    <div><strong>${m.name}</strong> (${m.experience})</div>
+                    <button class="btn btn-danger btn-sm" onclick="deleteAdminMaster('${m.id}')">Удалить</button>
+                </div>`;
+            });
+            mstListEl.innerHTML = html || '<div class="empty-state">Нет мастеров</div>';
+        }
+
+        var qbS = document.getElementById('qbService');
+        var qbM = document.getElementById('qbMaster');
+        if (qbS && srvs) {
+            qbS.innerHTML = srvs.map(s => `<option value="${s.name}">${s.name} (${s.price})</option>`).join('');
+        }
+        if (qbM && msts) {
+            qbM.innerHTML = msts.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
+        }
+    }
+
+    async function saveAdminService() {
+        var name = document.getElementById('srvName').value.trim();
+        var priceNum = parseInt(document.getElementById('srvPrice').value);
+        var duration = document.getElementById('srvDuration').value.trim();
+        if (!name || !priceNum) { alert('Заполните название и цену'); return; }
+        
+        var data = {
+            name: name,
+            price: priceNum + ' ₽',
+            price_num: priceNum,
+            duration: duration || '60 мин',
+            duration_minutes: 60
+        };
+        await postData('/api/admin/services', data);
+        document.getElementById('srvName').value = '';
+        document.getElementById('srvPrice').value = '';
+        document.getElementById('srvDuration').value = '';
+        loadAdminServicesAndMasters();
+    }
+
+    async function deleteAdminService(id) {
+        if (!confirm('Удалить услугу?')) return;
+        await fetch('/api/admin/services?id=' + id, { method: 'DELETE' });
+        loadAdminServicesAndMasters();
+    }
+
+    async function saveAdminMaster() {
+        var name = document.getElementById('mstName').value.trim();
+        var exp = document.getElementById('mstExp').value.trim();
+        if (!name) { alert('Заполните имя мастера'); return; }
+        
+        var data = {
+            name: name,
+            experience: exp || '5 лет'
+        };
+        await postData('/api/admin/masters', data);
+        document.getElementById('mstName').value = '';
+        document.getElementById('mstExp').value = '';
+        loadAdminServicesAndMasters();
+    }
+
+    async function deleteAdminMaster(id) {
+        if (!confirm('Удалить мастера?')) return;
+        await fetch('/api/admin/masters?id=' + id, { method: 'DELETE' });
+        loadAdminServicesAndMasters();
+    }
+
+    async function loadAdminPromos() {
+        var promos = await fetchData('/api/admin/promos');
+        var el = document.getElementById('promosManagerList');
+        if (!el) return;
+        if (!promos || promos.length === 0) {
+            el.innerHTML = '<div class="empty-state">Нет активных промокодов</div>';
+            return;
+        }
+        var html = '';
+        promos.forEach(function(p) {
+            var valText = p.discount_type === 'percent' ? p.discount_value + '%' : p.discount_value + ' ₽';
+            html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--surface); border:1px solid var(--border-light); border-radius:6px; margin-bottom:8px;">
+                <div><strong>${p.code}</strong> — скидка ${valText}</div>
+                <button class="btn btn-danger btn-sm" onclick="deleteAdminPromo('${p.code}')">Удалить</button>
+            </div>`;
+        });
+        el.innerHTML = html;
+    }
+
+    async function saveAdminPromo() {
+        var code = document.getElementById('prmCode').value.trim().toUpperCase();
+        var type = document.getElementById('prmType').value;
+        var val = parseFloat(document.getElementById('prmVal').value);
+        if (!code || !val) { alert('Заполните код и значение'); return; }
+        
+        await postData('/api/admin/promos', {
+            code: code,
+            discount_type: type,
+            discount_value: val,
+            active: true
+        });
+        document.getElementById('prmCode').value = '';
+        document.getElementById('prmVal').value = '';
+        loadAdminPromos();
+    }
+
+    async function deleteAdminPromo(code) {
+        if (!confirm('Удалить промокод ' + code + '?')) return;
+        await fetch('/api/admin/promos?code=' + code, { method: 'DELETE' });
+        loadAdminPromos();
+    }
+
+    async function loadAdminReviews() {
+        var res = await fetchData('/api/reviews/list');
+        var el = document.getElementById('reviewsManagerList');
+        if (!el) return;
+        var reviews = res ? res.reviews : [];
+        if (!reviews || reviews.length === 0) {
+            el.innerHTML = '<div class="empty-state">Пока нет отзывов</div>';
+            return;
+        }
+        var html = '';
+        reviews.forEach(function(r) {
+            var stars = '★'.repeat(r.rating || 5);
+            html += `<div style="padding:12px; background:var(--surface); border:1px solid var(--border-light); border-radius:6px; margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between;">
+                    <strong>${r.client_name} (для мастера ${r.master})</strong>
+                    <span style="color:#F59E0B;">${stars} (${r.rating}/5)</span>
+                </div>
+                <p style="font-size:0.85rem; margin-top:6px; color:var(--text-secondary);">${r.comment}</p>
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">${r.date}</div>
+            </div>`;
+        });
+        el.innerHTML = html;
+    }
+
+    async function submitQuickBook() {
+        var name = document.getElementById('qbName').value.trim();
+        var phone = document.getElementById('qbPhone').value.trim();
+        var service = document.getElementById('qbService').value;
+        var master = document.getElementById('qbMaster').value;
+        var date = document.getElementById('qbDate').value;
+        var time = document.getElementById('qbTime').value;
+        var statusEl = document.getElementById('qbStatus');
+        
+        if (!name || !phone || !date || !time) {
+            statusEl.style.color = 'var(--red)';
+            statusEl.textContent = 'Заполните имя, телефон, дату и время';
+            return;
+        }
+        
+        var data = { name: name, phone: phone, service: service, master: master, date: date, time: time };
+        var res = await postData('/api/admin/quick_book', data);
+        if (res && res.success) {
+            statusEl.style.color = 'var(--green)';
+            statusEl.textContent = 'Запись успешно создана (ID #' + res.id + ')!';
+            document.getElementById('qbName').value = '';
+            document.getElementById('qbPhone').value = '';
+        } else {
+            statusEl.style.color = 'var(--red)';
+            statusEl.textContent = (res ? res.message : 'Ошибка создания записи');
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         loadStatsSummary();
         loadToday();
@@ -1415,20 +1594,9 @@
         loadMastersForSelect();
         loadStats();
         loadRevenue();
-        
-        setInterval(function() {
-            var activeTab = document.querySelector('.tab-content.active');
-            var tabId = activeTab ? activeTab.id : 'tabToday';
-            loadStatsSummary();
-            if (tabId === 'tabToday') loadToday();
-            if (tabId === 'tabTomorrow') loadTomorrow();
-            if (tabId === 'tabAll') loadAllBookings();
-            if (tabId === 'tabCalendar') loadCalendar();
-            if (tabId === 'tabMasterCalendar') loadMasterCalendar();
-            if (tabId === 'tabStats') loadStats();
-            if (tabId === 'tabRevenue') loadRevenue();
-        }, 60000);
+        loadAdminServicesAndMasters();
     });
+
 </script>
 
 </body>
