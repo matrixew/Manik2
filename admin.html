@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>BotProk — Админ-панель</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #FAFAFA;
+            --surface: #FFFFFF;
+            --text: #1A1A1A;
+            --text-secondary: #6B6B6B;
+            --text-muted: #999999;
+            --border: #E5E5E5;
+            --border-light: #F0F0F0;
+            --accent: #1A1A1A;
+            --accent-hover: #333333;
+            --green: #2E7D32;
+            --green-bg: #E8F5E9;
+            --red: #C62828;
+            --red-bg: #FFEBEE;
+            --gray: #757575;
+            --gray-bg: #F5F5F5;
+            --radius: 8px;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            padding: 12px;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            background: var(--surface);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius);
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .header h1 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .header .back-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.8rem;
+            transition: color var(--transition);
+        }
+        .header .back-link:hover {
+            color: var(--text);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius);
+            padding: 12px 16px;
+        }
+        .stat-card .label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .stat-card .value {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .section {
+            background: var(--surface);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius);
+            padding: 16px 18px;
+            margin-bottom: 16px;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-light);
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .section-header h2 {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        .section-header .sub {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .btn {
+            padding: 6px 14px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: inline-block;
+            text-align: center;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover {
+            background: var(--bg);
+        }
+        .btn-danger {
+            background: var(--red);
+            color: #fff;
+        }
+        .btn-danger:hover {
+            background: #B71C1C;
+        }
+        .btn-sm {
+            padding: 3px 10px;
+            font-size: 0.65rem;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .filter-row select,
+        .filter-row input {
+            padding: 5px 10px;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-family: 'Inter', sans-serif;
+            background: var(--surface);
+            color: var(--text);
+            outline: none;
+            flex: 1;
+            min-width: 120px;
+        }
+        .filter-row select:focus,
+        .filter-row input:focus {
+            border-color: var(--accent);
+        }
+        .filter-row .btn {
+            flex: 0 0 auto;
+        }
+
+        .booking-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .booking-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .booking-list::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        .booking-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            background: var(--bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-light);
+            transition: all var(--transition);
+            font-size: 0.8rem;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .booking-item:hover {
+            border-color: var(--border);
+        }
+        .booking-item .info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+            min-width: 150px;
+        }
+        .booking-item .info .main {
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+        .booking-item .info .details {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 10px;
+        }
+        .booking-item .actions {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 3px;
+        }
+        .calendar-grid .day-label {
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-align: center;
+            color: var(--text-muted);
+            padding: 2px 0;
+        }
+        .calendar-grid .day {
+            padding: 6px 2px;
+            text-align: center;
+            border-radius: var(--radius);
+            font-size: 0.75rem;
+            background: var(--bg);
+            border: 1px solid var(--border-light);
+            cursor: pointer;
+            transition: all var(--transition);
+            min-height: 32px;
+        }
+        .calendar-grid .day:hover {
+            border-color: var(--border);
+        }
+        .calendar-grid .day.has-booking {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+        .calendar-grid .day.empty {
+            background: transparent;
+            border: none;
+            cursor: default;
+        }
+        .calendar-grid .day .count {
+            font-size: 0.5rem;
+            opacity: 0.7;
+        }
+
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .calendar-nav .month {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .calendar-nav .btn {
+            padding: 3px 10px;
+            font-size: 0.7rem;
+        }
+        .calendar-legend {
+            margin-top: 8px;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .calendar-legend .dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+
+        .master-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 6px;
+        }
+        .master-stat {
+            background: var(--bg);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius);
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+        .master-stat .name {
+            font-weight: 500;
+        }
+        .master-stat .count {
+            color: var(--text-secondary);
+        }
+
+        .revenue-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 8px;
+        }
+        .revenue-item {
+            background: var(--bg);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius);
+            padding: 10px 14px;
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+        .revenue-item:hover {
+            border-color: var(--border);
+            background: var(--surface);
+            box-shadow: var(--shadow);
+        }
+        .revenue-item .label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .revenue-item .value {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .delete-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .delete-row input[type="number"] {
+            width: 80px;
+            padding: 5px 8px;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-family: 'Inter', sans-serif;
+            background: var(--surface);
+            color: var(--text);
+            outline: none;
+        }
+        .delete-row input[type="number"]:focus {
+            border-color: var(--accent);
+        }
+        .delete-row .warning {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .stats-30days {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .stats-30days .day-stat {
+            background: var(--bg);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            border: 1px solid var(--border-light);
+        }
+
+        #deleteMessage {
+            margin-top: 8px;
+            font-size: 0.75rem;
+            display: none;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--border-light);
+            padding-bottom: 0;
+            overflow-x: auto;
+        }
+        .tab-buttons .tab-btn {
+            padding: 6px 16px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            border-bottom: 2px solid transparent;
+            transition: all var(--transition);
+            font-family: 'Inter', sans-serif;
+            white-space: nowrap;
+        }
+        .tab-buttons .tab-btn:hover {
+            color: var(--text);
+        }
+        .tab-buttons .tab-btn.active {
+            color: var(--text);
+            border-bottom-color: var(--accent);
+        }
+
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 8px; }
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+            }
+            .stat-card {
+                padding: 10px 12px;
+            }
+            .stat-card .value {
+                font-size: 1.1rem;
+            }
+            .header {
+                padding: 10px 14px;
+                flex-direction: column;
+                text-align: center;
+            }
+            .header h1 {
+                font-size: 1rem;
+            }
+            .section {
+                padding: 12px 14px;
+            }
+            .section-header h2 {
+                font-size: 0.85rem;
+            }
+            .booking-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .booking-item .actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filter-row select,
+            .filter-row input {
+                min-width: unset;
+                width: 100%;
+            }
+            .filter-row .btn {
+                flex: 1;
+            }
+            .calendar-grid .day {
+                padding: 4px 1px;
+                font-size: 0.65rem;
+                min-height: 26px;
+            }
+            .master-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+            .revenue-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .delete-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .delete-row input[type="number"] {
+                width: 100%;
+            }
+            .tab-buttons .tab-btn {
+                padding: 4px 12px;
+                font-size: 0.7rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .master-stats {
+                grid-template-columns: 1fr;
+            }
+            .revenue-grid {
+                grid-template-columns: 1fr;
+            }
+            .calendar-grid .day {
+                font-size: 0.55rem;
+                min-height: 22px;
+                padding: 2px 1px;
+            }
+            .booking-item .info .details {
+                font-size: 0.65rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- HEADER С КНОПКОЙ ВЫЙТИ -->
+    <div class="header">
+        <h1>Админ-панель BotProk</h1>
+        <div style="display:flex; gap:12px; align-items:center;">
+            <a href="/" class="back-link">На сайт</a>
+            <button onclick="logout()" style="padding:6px 16px; font-size:0.75rem; font-weight:500; font-family:'Inter',sans-serif; border:1px solid var(--border); border-radius:6px; cursor:pointer; background:transparent; color:var(--text-secondary); transition:all var(--transition);">
+                Выйти
+            </button>
+        </div>
+    </div>
+
+    <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+            <div class="label">Всего записей</div>
+            <div class="value" id="statTotal">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Сегодня</div>
+            <div class="value" id="statToday">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">За неделю</div>
+            <div class="value" id="statWeek">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Выручка (месяц)</div>
+            <div class="value" id="statRevenue">0 ₽</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="tab-buttons" id="mainTabs">
+            <button class="tab-btn active" data-tab="tabToday" onclick="switchMainTab('tabToday')">Сегодня</button>
+            <button class="tab-btn" data-tab="tabTomorrow" onclick="switchMainTab('tabTomorrow')">Завтра</button>
+            <button class="tab-btn" data-tab="tabAll" onclick="switchMainTab('tabAll')">Все записи</button>
+            <button class="tab-btn" data-tab="tabCalendar" onclick="switchMainTab('tabCalendar')">Календарь</button>
+            <button class="tab-btn" data-tab="tabQuickBook" onclick="switchMainTab('tabQuickBook')">Ручная запись</button>
+            <button class="tab-btn" data-tab="tabServicesMasters" onclick="switchMainTab('tabServicesMasters')">Прайс и Мастера</button>
+            <button class="tab-btn" data-tab="tabPromos" onclick="switchMainTab('tabPromos')">Промокоды</button>
+            <button class="tab-btn" data-tab="tabReviews" onclick="switchMainTab('tabReviews')">Отзывы</button>
+            <button class="tab-btn" data-tab="tabStats" onclick="switchMainTab('tabStats')">Статистика</button>
+            <button class="tab-btn" data-tab="tabRevenue" onclick="switchMainTab('tabRevenue')">Выручка</button>
+            <button class="tab-btn" data-tab="tabDelete" onclick="switchMainTab('tabDelete')">Управление</button>
+        </div>
+
+
+        <div class="tab-content active" id="tabToday">
+            <div class="section-header">
+                <h2>Записи на сегодня</h2>
+                <span class="sub" id="todayCount">0 записей</span>
+            </div>
+            <div class="booking-list" id="todayList">
+                <div class="empty-state">Загрузка...</div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tabTomorrow">
+            <div class="section-header">
+                <h2>Записи на завтра</h2>
+                <span class="sub" id="tomorrowCount">0 записей</span>
+            </div>
+            <div class="booking-list" id="tomorrowList">
+                <div class="empty-state">Загрузка...</div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tabAll">
+            <div class="section-header">
+                <h2>Все записи</h2>
+                <span class="sub" id="allCount">0 записей</span>
+            </div>
+            <div class="filter-row">
+                <input type="date" id="filterDate" />
+                <select id="filterMaster">
+                    <option value="">Все мастера</option>
+                </select>
+                <button class="btn btn-secondary btn-sm" onclick="applyFilters()">Применить</button>
+                <button class="btn btn-secondary btn-sm" onclick="resetFilters()">Сбросить</button>
+                <button class="btn btn-primary btn-sm" onclick="loadAllBookings()">Обновить</button>
+                <button class="btn btn-secondary btn-sm" onclick="exportCSV()">Скачать CSV</button>
+            </div>
+            <div class="booking-list" id="allBookingsList">
+                <div class="empty-state">Загрузка...</div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tabCalendar">
+            <div class="section-header">
+                <h2>Общий календарь</h2>
+            </div>
+            <div class="calendar-nav">
+                <button class="btn btn-secondary btn-sm" onclick="changeCalendarMonth(-1)">←</button>
+                <span class="month" id="calendarMonth">Январь 2026</span>
+                <button class="btn btn-secondary btn-sm" onclick="changeCalendarMonth(1)">→</button>
+                <button class="btn btn-secondary btn-sm" onclick="resetCalendarToday()">Сегодня</button>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+            <div class="calendar-legend">
+                <span class="dot"></span> — есть записи
+            </div>
+        </div>
+
+        <div class="tab-content" id="tabMasterCalendar">
+            <div class="section-header">
+                <h2>Календарь мастера</h2>
+            </div>
+            <div class="filter-row" style="margin-bottom:16px; gap:12px;">
+                <select id="masterCalendarSelect" style="flex:2; min-width:200px; padding:10px 14px; font-size:0.95rem; border:1px solid var(--border-light); border-radius:6px; font-family:'Inter',sans-serif; background:var(--surface); color:var(--text); outline:none;">
+                    <option value="">Выберите мастера</option>
+                </select>
+                <button class="btn btn-primary" onclick="loadMasterCalendar()" style="padding:10px 28px; font-size:0.95rem; font-weight:600; border-radius:6px; cursor:pointer; transition:all var(--transition); border:none; background:var(--accent); color:#fff; font-family:'Inter',sans-serif;">
+                    Показать
+                </button>
+            </div>
+            <div class="calendar-nav">
+                <button class="btn btn-secondary btn-sm" onclick="changeMasterCalendarMonth(-1)">←</button>
+                <span class="month" id="masterCalendarMonth">Январь 2026</span>
+                <button class="btn btn-secondary btn-sm" onclick="changeMasterCalendarMonth(1)">→</button>
+                <button class="btn btn-secondary btn-sm" onclick="resetMasterCalendarToday()">Сегодня</button>
+            </div>
+            <div class="calendar-grid" id="masterCalendarGrid"></div>
+            <div class="calendar-legend">
+                <span class="dot"></span> — есть записи
+            </div>
+            <div id="masterCalendarInfo" style="margin-top:8px; font-size:0.8rem; color:var(--text-secondary);"></div>
+        </div>
+
+        <div class="tab-content" id="tabStats">
+            <div class="section-header">
+                <h2>Статистика по мастерам</h2>
+                <span class="sub">Нагрузка на мастеров</span>
+            </div>
+            <div class="master-stats" id="masterStats">
+                <div class="empty-state">Загрузка...</div>
+            </div>
+            <div style="margin-top:16px; border-top:1px solid var(--border-light); padding-top:16px;">
+                <h3 style="font-size:0.85rem; font-weight:600; margin-bottom:10px;">Статистика за 30 дней</h3>
+                <div class="stats-30days" id="stats30Days">
+                    <div class="empty-state">Загрузка...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tabRevenue">
+            <div class="section-header">
+                <h2>Финансовая аналитика</h2>
+            </div>
+            <div id="revenueStats">
+                <div class="empty-state">Загрузка...</div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tabDelete">
+            <div class="section-header">
+                <h2>Управление записями</h2>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                <div>
+                    <label style="font-size:0.75rem; display:block; margin-bottom:4px;">Удалить по ID</label>
+                    <div class="delete-row">
+                        <input type="number" id="deleteByIdInput" placeholder="ID" />
+                        <button class="btn btn-danger btn-sm" onclick="deleteById()">Удалить</button>
+                    </div>
+                </div>
+                <div class="delete-row">
+                    <span class="warning">Удалить все записи (необратимо)</span>
+                    <button class="btn btn-danger btn-sm" onclick="deleteAll()">Удалить все</button>
+                </div>
+            </div>
+            <div id="deleteMessage"></div>
+        </div>
+
+        <div class="tab-content" id="tabQuickBook">
+            <div class="section-header">
+                <h2>Быстрая ручная запись</h2>
+                <span class="sub">Запись клиента по телефону или личного визита</span>
+            </div>
+            <div style="max-width: 500px; margin: 0 auto; background: var(--surface); padding: 20px; border-radius: var(--radius); border: 1px solid var(--border-light);">
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:4px;">Имя клиента</label>
+                    <input type="text" id="qbName" placeholder="Анна" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:6px; font-family:'Inter';">
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:4px;">Телефон клиента</label>
+                    <input type="text" id="qbPhone" placeholder="+7 (900) 000-00-00" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:6px; font-family:'Inter';">
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:4px;">Услуга</label>
+                    <select id="qbService" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:6px; font-family:'Inter';"></select>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:4px;">Мастер</label>
+                    <select id="qbMaster" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:6px; font-family:'Inter';"></select>
+                </div>
+                <div style="margin-bottom: 12px; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:4px;">Дата</label>
+                        <input type="date" id="qbDate" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:6px; font-family:'Inter';">
+                    </div>
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:4px;">Время</label>
+                        <input type="time" id="qbTime" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:6px; font-family:'Inter';">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="submitQuickBook()" style="width:100%; padding:10px; margin-top:8px;">Создать запись</button>
+                <div id="qbStatus" style="margin-top:10px; font-size:0.85rem; text-align:center;"></div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tabServicesMasters">
+            <div class="section-header">
+                <h2>Прайс-лист и Мастера</h2>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <div>
+                    <h3 style="font-size:0.95rem; margin-bottom:12px;">Услуги</h3>
+                    <div id="servicesManagerList" style="margin-bottom:16px;"></div>
+                    <div style="background:var(--bg); padding:12px; border-radius:6px; border:1px solid var(--border-light);">
+                        <h4 style="font-size:0.85rem; margin-bottom:8px;">Добавить / изменить услугу</h4>
+                        <input type="text" id="srvName" placeholder="Название услуги" style="width:100%; margin-bottom:8px; padding:6px 10px; border:1px solid var(--border); border-radius:4px;">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+                            <input type="number" id="srvPrice" placeholder="Цена (руб)" style="padding:6px 10px; border:1px solid var(--border); border-radius:4px;">
+                            <input type="text" id="srvDuration" placeholder="Длительность (60 мин)" style="padding:6px 10px; border:1px solid var(--border); border-radius:4px;">
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="saveAdminService()">Сохранить услугу</button>
+                    </div>
+                </div>
+                <div>
+                    <h3 style="font-size:0.95rem; margin-bottom:12px;">Мастера</h3>
+                    <div id="mastersManagerList" style="margin-bottom:16px;"></div>
+                    <div style="background:var(--bg); padding:12px; border-radius:6px; border:1px solid var(--border-light);">
+                        <h4 style="font-size:0.85rem; margin-bottom:8px;">Добавить мастера</h4>
+                        <input type="text" id="mstName" placeholder="ФИО мастера" style="width:100%; margin-bottom:8px; padding:6px 10px; border:1px solid var(--border); border-radius:4px;">
+                        <input type="text" id="mstExp" placeholder="Опыт (например: 5 лет)" style="width:100%; margin-bottom:8px; padding:6px 10px; border:1px solid var(--border); border-radius:4px;">
+                        <button class="btn btn-primary btn-sm" onclick="saveAdminMaster()">Сохранить мастера</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tabPromos">
+            <div class="section-header">
+                <h2>Промокоды</h2>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <div id="promosManagerList"></div>
+                <div style="background:var(--bg); padding:16px; border-radius:6px; border:1px solid var(--border-light); height:fit-content;">
+                    <h3 style="font-size:0.9rem; margin-bottom:12px;">Создать промокод</h3>
+                    <input type="text" id="prmCode" placeholder="Код (например: SUMMER15)" style="width:100%; margin-bottom:8px; padding:8px 10px; border:1px solid var(--border); border-radius:4px; text-transform:uppercase;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+                        <select id="prmType" style="padding:8px 10px; border:1px solid var(--border); border-radius:4px;">
+                            <option value="percent">Процент (%)</option>
+                            <option value="fixed">Сумма (руб)</option>
+                        </select>
+                        <input type="number" id="prmVal" placeholder="Значение (10 или 500)" style="padding:8px 10px; border:1px solid var(--border); border-radius:4px;">
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="saveAdminPromo()">Создать промокод</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tabReviews">
+            <div class="section-header">
+                <h2>Отзывы клиентов</h2>
+            </div>
+            <div id="reviewsManagerList"></div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    // ========================================
+    // СОСТОЯНИЕ
+    // ========================================
+    var calendarYear = new Date().getFullYear();
+    var calendarMonth = new Date().getMonth();
+    var masterCalendarYear = new Date().getFullYear();
+    var masterCalendarMonth = new Date().getMonth();
+    var selectedMaster = '';
+    var currentFilter = { date: '', master: '' };
+
+    // ========================================
+    // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+    // ========================================
+    async function fetchData(url) {
+        try {
+            var response = await fetch(url);
+            return await response.json();
+        } catch (error) {
+            console.error('Ошибка:', error);
+            return null;
+        }
+    }
+
+    function formatDate(dateStr) {
+        return dateStr.split('-').reverse().join('.');
+    }
+
+    function getStatusInfo(status) {
+        if (status === 'active') return { class: 'active', text: 'Активна' };
+        if (status === 'completed') return { class: 'completed', text: 'Завершена' };
+        return { class: 'canceled', text: 'Отменена' };
+    }
+
+    function renderBookingItem(b) {
+        var status = getStatusInfo(b.status);
+        var dateFormatted = formatDate(b.date);
+        return `
+            <div class="booking-item">
+                <div class="info">
+                    <div class="main">#${b.id} — ${b.service}</div>
+                    <div class="details">
+                        <span>${b.client_name || b.name}</span>
+                        <span>${b.client_phone || b.phone}</span>
+                        <span>${b.master}</span>
+                        <span>${dateFormatted}</span>
+                        <span>${b.time}</span>
+                        <span style="color:${status.class === 'active' ? 'var(--green)' : status.class === 'completed' ? 'var(--gray)' : 'var(--red)'}">${status.text}</span>
+                        <span>${b.price || 0} ₽</span>
+                    </div>
+                </div>
+                <div class="actions">
+                    ${b.status === 'active' ? `<button class="btn btn-danger btn-sm" onclick="cancelBooking(${b.id})">Отменить</button>` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    // ========================================
+    // ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
+    // ========================================
+    function switchMainTab(tabId) {
+        var tabs = document.querySelectorAll('#mainTabs .tab-btn');
+        for (var i = 0; i < tabs.length; i++) {
+            tabs[i].classList.remove('active');
+            if (tabs[i].dataset.tab === tabId) {
+                tabs[i].classList.add('active');
+            }
+        }
+        var contents = document.querySelectorAll('.tab-content');
+        for (var i = 0; i < contents.length; i++) {
+            contents[i].classList.remove('active');
+        }
+        document.getElementById(tabId).classList.add('active');
+        
+        if (tabId === 'tabToday') loadToday();
+        if (tabId === 'tabTomorrow') loadTomorrow();
+        if (tabId === 'tabAll') loadAllBookings();
+        if (tabId === 'tabCalendar') loadCalendar();
+        if (tabId === 'tabMasterCalendar') loadMastersForSelect();
+        if (tabId === 'tabStats') loadStats();
+        if (tabId === 'tabRevenue') loadRevenue();
+        if (tabId === 'tabQuickBook') loadAdminServicesAndMasters();
+        if (tabId === 'tabServicesMasters') loadAdminServicesAndMasters();
+        if (tabId === 'tabPromos') loadAdminPromos();
+        if (tabId === 'tabReviews') loadAdminReviews();
+    }
+
+
+    function exportCSV() {
+        if (!allBookingsData || allBookingsData.length === 0) {
+            alert('Нет данных для экспорта');
+            return;
+        }
+        var csvContent = "data:text/csv;charset=utf-8,ID,Имя,Телефон,Услуга,Мастер,Дата,Время,Цена,Статус\n";
+        allBookingsData.forEach(function(b) {
+            var row = [b.id, `"${b.client_name || b.name}"`, `"${b.client_phone || b.phone}"`, `"${b.service}"`, `"${b.master}"`, b.date, b.time, b.price, b.status].join(",");
+            csvContent += row + "\n";
+        });
+        var encodedUri = encodeURI(csvContent);
+        var link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "bookings_export.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // ========================================
+    // СТАТИСТИКА (верхняя)
+    // ========================================
+    async function loadStatsSummary() {
+        var data = await fetchData('/api/admin/revenue_stats');
+        if (data) {
+            document.getElementById('statTotal').textContent = data.total.count || 0;
+            document.getElementById('statToday').textContent = data.today.count || 0;
+            document.getElementById('statWeek').textContent = data.week.count || 0;
+            document.getElementById('statRevenue').textContent = (data.month.revenue || 0) + ' ₽';
+        }
+    }
+
+    // ========================================
+    // СЕГОДНЯ
+    // ========================================
+    async function loadToday() {
+        var today = new Date().toISOString().split('T')[0];
+        var data = await fetchData('/api/admin/bookings?date=' + today);
+        var container = document.getElementById('todayList');
+        var countEl = document.getElementById('todayCount');
+        
+        if (!data || data.length === 0) {
+            container.innerHTML = '<div class="empty-state">Нет записей на сегодня</div>';
+            countEl.textContent = '0 записей';
+            return;
+        }
+        countEl.textContent = data.length + ' записей';
+        var html = '';
+        for (var i = 0; i < data.length; i++) {
+            html += renderBookingItem(data[i]);
+        }
+        container.innerHTML = html;
+    }
+
+    // ========================================
+    // ЗАВТРА
+    // ========================================
+    async function loadTomorrow() {
+        var tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        var dateStr = tomorrow.toISOString().split('T')[0];
+        var data = await fetchData('/api/admin/bookings?date=' + dateStr);
+        var container = document.getElementById('tomorrowList');
+        var countEl = document.getElementById('tomorrowCount');
+        
+        if (!data || data.length === 0) {
+            container.innerHTML = '<div class="empty-state">Нет записей на завтра</div>';
+            countEl.textContent = '0 записей';
+            return;
+        }
+        countEl.textContent = data.length + ' записей';
+        var html = '';
+        for (var i = 0; i < data.length; i++) {
+            html += renderBookingItem(data[i]);
+        }
+        container.innerHTML = html;
+    }
+
+    // ========================================
+    // ВСЕ ЗАПИСИ
+    // ========================================
+    async function loadAllBookings() {
+        var url = '/api/admin/bookings';
+        if (currentFilter.date) url += '?date=' + currentFilter.date;
+        if (currentFilter.master) url += (currentFilter.date ? '&' : '?') + 'master=' + encodeURIComponent(currentFilter.master);
+        
+        var data = await fetchData(url);
+        var container = document.getElementById('allBookingsList');
+        var countEl = document.getElementById('allCount');
+        
+        if (!data || data.length === 0) {
+            container.innerHTML = '<div class="empty-state">Нет записей</div>';
+            countEl.textContent = '0 записей';
+            return;
+        }
+        countEl.textContent = data.length + ' записей';
+        var html = '';
+        for (var i = 0; i < data.length; i++) {
+            html += renderBookingItem(data[i]);
+        }
+        container.innerHTML = html;
+
+        var masters = await fetchData('/api/admin/masters');
+        if (masters) {
+            var select = document.getElementById('filterMaster');
+            var currentVal = select.value;
+            select.innerHTML = '<option value="">Все мастера</option>';
+            for (var i = 0; i < masters.length; i++) {
+                var opt = document.createElement('option');
+                opt.value = masters[i];
+                opt.textContent = masters[i];
+                if (opt.value === currentVal) opt.selected = true;
+                select.appendChild(opt);
+            }
+        }
+    }
+
+    function applyFilters() {
+        currentFilter.date = document.getElementById('filterDate').value;
+        currentFilter.master = document.getElementById('filterMaster').value;
+        loadAllBookings();
+    }
+
+    function resetFilters() {
+        document.getElementById('filterDate').value = '';
+        document.getElementById('filterMaster').value = '';
+        currentFilter = { date: '', master: '' };
+        loadAllBookings();
+    }
+
+    // ========================================
+    // ОБЩИЙ КАЛЕНДАРЬ (1 ЗАПРОС НА МЕСЯЦ)
+    // ========================================
+    async function loadCalendar() {
+        var monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                          'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+        document.getElementById('calendarMonth').textContent = monthNames[calendarMonth] + ' ' + calendarYear;
+
+        var container = document.getElementById('calendarGrid');
+        var daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+        var firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
+        var dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+
+        // ОДИН ЗАПРОС на весь месяц
+        var url = '/api/admin/month_bookings?year=' + calendarYear + '&month=' + (calendarMonth + 1);
+        var data = await fetchData(url);
+
+        var html = '';
+        for (var i = 0; i < 7; i++) {
+            html += '<div class="day-label">' + dayNames[i] + '</div>';
+        }
+
+        var startOffset = firstDay === 0 ? 6 : firstDay - 1;
+        for (var i = 0; i < startOffset; i++) {
+            html += '<div class="day empty"></div>';
+        }
+
+        for (var d = 1; d <= daysInMonth; d++) {
+            var dayBookings = data && data[d] ? data[d] : [];
+            var count = dayBookings.length;
+            
+            var dateStr = calendarYear + '-' + String(calendarMonth + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+            html += `<div class="day${count > 0 ? ' has-booking' : ''}" onclick="showDayBookings('${dateStr}')">
+                ${d}${count > 0 ? `<div class="count">${count}</div>` : ''}
+            </div>`;
+        }
+
+        container.innerHTML = html;
+    }
+
+    function changeCalendarMonth(delta) {
+        calendarMonth += delta;
+        if (calendarMonth < 0) { calendarMonth = 11; calendarYear--; }
+        if (calendarMonth > 11) { calendarMonth = 0; calendarYear++; }
+        loadCalendar();
+    }
+
+    function resetCalendarToday() {
+        var now = new Date();
+        calendarYear = now.getFullYear();
+        calendarMonth = now.getMonth();
+        loadCalendar();
+    }
+
+    async function showDayBookings(date) {
+        var data = await fetchData('/api/admin/bookings?date=' + date);
+        if (!data || data.length === 0) {
+            alert('Нет записей на эту дату');
+            return;
+        }
+
+        var msg = 'Записи на ' + formatDate(date) + ':\n\n';
+        for (var i = 0; i < data.length; i++) {
+            var b = data[i];
+            var status = getStatusInfo(b.status);
+            var masterName = b.master || b.master_id || 'Не указан';
+            var clientName = b.client_name || b.name || 'Не указан';
+            msg += '#' + b.id + ' ' + b.time + ' — ' + b.service + '\n';
+            msg += '  Клиент: ' + clientName + '\n';
+            msg += '  Мастер: ' + masterName + '\n';
+            msg += '  Статус: ' + status.text + '\n';
+            msg += '  Сумма: ' + (b.price || 0) + ' ₽\n\n';
+        }
+        alert(msg);
+    }
+
+    // ========================================
+    // КАЛЕНДАРЬ МАСТЕРА (1 ЗАПРОС НА МЕСЯЦ)
+    // ========================================
+    async function loadMastersForSelect() {
+        var masters = await fetchData('/api/admin/masters');
+        var select = document.getElementById('masterCalendarSelect');
+        if (masters) {
+            select.innerHTML = '<option value="">Выберите мастера</option>';
+            for (var i = 0; i < masters.length; i++) {
+                var opt = document.createElement('option');
+                opt.value = masters[i];
+                opt.textContent = masters[i];
+                select.appendChild(opt);
+            }
+        }
+        if (selectedMaster) {
+            select.value = selectedMaster;
+        }
+        loadMasterCalendar();
+    }
+
+    async function loadMasterCalendar() {
+        var select = document.getElementById('masterCalendarSelect');
+        selectedMaster = select.value;
+        if (!selectedMaster) {
+            document.getElementById('masterCalendarGrid').innerHTML = '<div class="empty-state">Выберите мастера</div>';
+            document.getElementById('masterCalendarInfo').textContent = '';
+            return;
+        }
+
+        var monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                          'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+        document.getElementById('masterCalendarMonth').textContent = monthNames[masterCalendarMonth] + ' ' + masterCalendarYear;
+
+        var container = document.getElementById('masterCalendarGrid');
+        var daysInMonth = new Date(masterCalendarYear, masterCalendarMonth + 1, 0).getDate();
+        var firstDay = new Date(masterCalendarYear, masterCalendarMonth, 1).getDay();
+        var dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+
+        // ОДИН ЗАПРОС на весь месяц
+        var url = '/api/admin/master_month_bookings?master=' + encodeURIComponent(selectedMaster) + '&year=' + masterCalendarYear + '&month=' + (masterCalendarMonth + 1);
+        var data = await fetchData(url);
+
+        var html = '';
+        for (var i = 0; i < 7; i++) {
+            html += '<div class="day-label">' + dayNames[i] + '</div>';
+        }
+
+        var startOffset = firstDay === 0 ? 6 : firstDay - 1;
+        for (var i = 0; i < startOffset; i++) {
+            html += '<div class="day empty"></div>';
+        }
+
+        var total = 0;
+        for (var d = 1; d <= daysInMonth; d++) {
+            var dayBookings = data && data[d] ? data[d] : [];
+            var count = dayBookings.length;
+            total += count;
+            
+            var dateStr = masterCalendarYear + '-' + String(masterCalendarMonth + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+            html += `<div class="day${count > 0 ? ' has-booking' : ''}" onclick="showMasterDayBookings('${dateStr}')">
+                ${d}${count > 0 ? `<div class="count">${count}</div>` : ''}
+            </div>`;
+        }
+
+        container.innerHTML = html;
+        document.getElementById('masterCalendarInfo').textContent = 'Всего записей за месяц: ' + total;
+    }
+
+    function changeMasterCalendarMonth(delta) {
+        masterCalendarMonth += delta;
+        if (masterCalendarMonth < 0) { masterCalendarMonth = 11; masterCalendarYear--; }
+        if (masterCalendarMonth > 11) { masterCalendarMonth = 0; masterCalendarYear++; }
+        loadMasterCalendar();
+    }
+
+    function resetMasterCalendarToday() {
+        var now = new Date();
+        masterCalendarYear = now.getFullYear();
+        masterCalendarMonth = now.getMonth();
+        loadMasterCalendar();
+    }
+
+    async function showMasterDayBookings(date) {
+        if (!selectedMaster) return;
+        var data = await fetchData('/api/admin/bookings?date=' + date + '&master=' + encodeURIComponent(selectedMaster));
+        if (!data || data.length === 0) {
+            alert('Нет записей мастера ' + selectedMaster + ' на эту дату');
+            return;
+        }
+
+        var msg = 'Записи мастера ' + selectedMaster + ' на ' + formatDate(date) + ':\n\n';
+        for (var i = 0; i < data.length; i++) {
+            var b = data[i];
+            var status = getStatusInfo(b.status);
+            var clientName = b.client_name || b.name || 'Не указан';
+            msg += '#' + b.id + ' ' + b.time + ' — ' + b.service + '\n';
+            msg += '  Клиент: ' + clientName + '\n';
+            msg += '  Статус: ' + status.text + '\n';
+            msg += '  Сумма: ' + (b.price || 0) + ' ₽\n\n';
+        }
+        alert(msg);
+    }
+
+    // ========================================
+    // СТАТИСТИКА
+    // ========================================
+    async function loadStats() {
+        var masterData = await fetchData('/api/admin/master_stats');
+        var container = document.getElementById('masterStats');
+        
+        if (!masterData || Object.keys(masterData).length === 0) {
+            container.innerHTML = '<div class="empty-state">Нет данных</div>';
+        } else {
+            var html = '';
+            var sorted = Object.keys(masterData).sort(function(a, b) { return masterData[b] - masterData[a]; });
+            for (var i = 0; i < sorted.length; i++) {
+                var name = sorted[i];
+                html += `
+                    <div class="master-stat">
+                        <span class="name">${name}</span>
+                        <span class="count">${masterData[name]} зап.</span>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        var statsData = await fetchData('/api/admin/stats');
+        var container30 = document.getElementById('stats30Days');
+        
+        if (!statsData || Object.keys(statsData).length === 0) {
+            container30.innerHTML = '<span class="empty-state" style="padding:10px;">Нет записей за 30 дней</span>';
+        } else {
+            var html = '';
+            var sorted30 = Object.keys(statsData).sort().reverse();
+            for (var i = 0; i < sorted30.length; i++) {
+                var date = sorted30[i];
+                var formatted = formatDate(date);
+                html += `<span class="day-stat">${formatted}: ${statsData[date]} зап.</span>`;
+            }
+            container30.innerHTML = html;
+        }
+    }
+
+    // ========================================
+    // ВЫРУЧКА
+    // ========================================
+    async function loadRevenue() {
+        var data = await fetchData('/api/admin/revenue_stats');
+        var container = document.getElementById('revenueStats');
+        
+        if (!data) {
+            container.innerHTML = '<div class="empty-state">Нет данных</div>';
+            return;
+        }
+
+        var monthsHtml = '';
+        if (data.by_month) {
+            var sortedMonths = Object.keys(data.by_month).sort().reverse();
+            monthsHtml = '<div style="margin-top:12px; border-top:1px solid var(--border-light); padding-top:12px;">';
+            monthsHtml += '<div style="font-weight:500; margin-bottom:6px; font-size:0.8rem;">По месяцам:</div>';
+            monthsHtml += '<div style="display:flex; flex-wrap:wrap; gap:4px;">';
+            for (var i = 0; i < sortedMonths.length; i++) {
+                var month = sortedMonths[i];
+                var mData = data.by_month[month];
+                var monthName = month.split('-')[1] + '.' + month.split('-')[0];
+                monthsHtml += `<span style="background:var(--bg); padding:2px 10px; border-radius:12px; font-size:0.7rem; cursor:pointer;" onclick="showMonthDetails('${month}')">${monthName}: ${mData.count} зап. (${mData.revenue} ₽)</span>`;
+            }
+            monthsHtml += '</div></div>';
+        }
+
+        var html = `
+            <div class="revenue-grid">
+                <div class="revenue-item" onclick="showPeriodDetails('today', 'Сегодня')">
+                    <div class="label">Сегодня</div>
+                    <div class="value">${data.today.count || 0} зап. / ${data.today.revenue || 0} ₽</div>
+                </div>
+                <div class="revenue-item" onclick="showPeriodDetails('week', 'За неделю')">
+                    <div class="label">За неделю</div>
+                    <div class="value">${data.week.count || 0} зап. / ${data.week.revenue || 0} ₽</div>
+                </div>
+                <div class="revenue-item" onclick="showPeriodDetails('month', 'За месяц')">
+                    <div class="label">За месяц</div>
+                    <div class="value">${data.month.count || 0} зап. / ${data.month.revenue || 0} ₽</div>
+                </div>
+                <div class="revenue-item" onclick="showPeriodDetails('total', 'Всего')">
+                    <div class="label">Всего</div>
+                    <div class="value">${data.total.count || 0} зап. / ${data.total.revenue || 0} ₽</div>
+                </div>
+            </div>
+            <div id="periodDetails" style="margin-top:12px; border-top:1px solid var(--border-light); padding-top:12px; display:none;">
+                <div id="periodDetailsContent"></div>
+            </div>
+            ${monthsHtml}
+        `;
+
+        container.innerHTML = html;
+    }
+
+    function showPeriodDetails(period, label) {
+        var container = document.getElementById('periodDetails');
+        var content = document.getElementById('periodDetailsContent');
+        container.style.display = 'block';
+        
+        fetch('/api/admin/revenue_stats')
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                var periodData = data[period];
+                if (!periodData || periodData.count === 0) {
+                    content.innerHTML = '<div class="empty-state">Нет данных за ' + label.toLowerCase() + '</div>';
+                    return;
+                }
+                
+                var html = '<div style="font-weight:500; margin-bottom:6px; font-size:0.8rem;">' + label + ' — ' + periodData.count + ' зап. на ' + periodData.revenue + ' ₽</div>';
+                
+                if (periodData.by_service) {
+                    html += '<div style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">По услугам:</div>';
+                    html += '<div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:6px;">';
+                    for (var service in periodData.by_service) {
+                        var d = periodData.by_service[service];
+                        html += `<span style="background:var(--bg); padding:2px 10px; border-radius:12px; font-size:0.7rem;">${service}: ${d.count} зап. (${d.revenue} ₽)</span>`;
+                    }
+                    html += '</div>';
+                }
+                
+                if (periodData.by_master) {
+                    html += '<div style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">По мастерам:</div>';
+                    html += '<div style="display:flex; flex-wrap:wrap; gap:4px;">';
+                    for (var master in periodData.by_master) {
+                        var d = periodData.by_master[master];
+                        html += `<span style="background:var(--bg); padding:2px 10px; border-radius:12px; font-size:0.7rem;">${master}: ${d.count} зап. (${d.revenue} ₽)</span>`;
+                    }
+                    html += '</div>';
+                }
+                
+                content.innerHTML = html;
+            })
+            .catch(function(error) {
+                content.innerHTML = '<div class="empty-state">Ошибка загрузки данных</div>';
+                console.error(error);
+            });
+    }
+
+    function showMonthDetails(month) {
+        var container = document.getElementById('periodDetails');
+        var content = document.getElementById('periodDetailsContent');
+        container.style.display = 'block';
+        
+        fetch('/api/admin/revenue_stats')
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                var monthData = data.by_month[month];
+                if (!monthData) {
+                    content.innerHTML = '<div class="empty-state">Нет данных за этот месяц</div>';
+                    return;
+                }
+                
+                var monthName = month.split('-')[1] + '.' + month.split('-')[0];
+                var html = '<div style="font-weight:500; margin-bottom:6px; font-size:0.8rem;">' + monthName + ' — ' + monthData.count + ' зап. на ' + monthData.revenue + ' ₽</div>';
+                
+                if (monthData.by_service) {
+                    html += '<div style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">По услугам:</div>';
+                    html += '<div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:6px;">';
+                    for (var service in monthData.by_service) {
+                        var d = monthData.by_service[service];
+                        html += `<span style="background:var(--bg); padding:2px 10px; border-radius:12px; font-size:0.7rem;">${service}: ${d.count} зап. (${d.revenue} ₽)</span>`;
+                    }
+                    html += '</div>';
+                }
+                
+                if (monthData.by_master) {
+                    html += '<div style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">По мастерам:</div>';
+                    html += '<div style="display:flex; flex-wrap:wrap; gap:4px;">';
+                    for (var master in monthData.by_master) {
+                        var d = monthData.by_master[master];
+                        html += `<span style="background:var(--bg); padding:2px 10px; border-radius:12px; font-size:0.7rem;">${master}: ${d.count} зап. (${d.revenue} ₽)</span>`;
+                    }
+                    html += '</div>';
+                }
+                
+                content.innerHTML = html;
+            })
+            .catch(function(error) {
+                content.innerHTML = '<div class="empty-state">Ошибка загрузки данных</div>';
+                console.error(error);
+            });
+    }
+
+    // ========================================
+    // УПРАВЛЕНИЕ
+    // ========================================
+    async function cancelBooking(id) {
+        if (!confirm('Отменить запись #' + id + '?')) return;
+        
+        var response = await fetch('/api/admin/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id })
+        });
+        var result = await response.json();
+        
+        showDeleteMessage(result.message, result.success);
+        refreshAllData();
+    }
+
+    async function deleteById() {
+        var input = document.getElementById('deleteByIdInput');
+        var id = parseInt(input.value);
+        if (!id || isNaN(id)) {
+            showDeleteMessage('Введите корректный ID', false);
+            return;
+        }
+        if (!confirm('Удалить запись #' + id + '?')) return;
+        
+        var response = await fetch('/api/admin/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id })
+        });
+        var result = await response.json();
+        
+        showDeleteMessage(result.message, result.success);
+        input.value = '';
+        refreshAllData();
+    }
+
+    async function deleteAll() {
+        if (!confirm('ВНИМАНИЕ! Удалить ВСЕ записи? Это необратимо!')) return;
+        if (!confirm('ПОСЛЕДНЕЕ ПРЕДУПРЕЖДЕНИЕ! Вы точно уверены?')) return;
+        
+        var response = await fetch('/api/admin/delete_all', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        var result = await response.json();
+        
+        showDeleteMessage(result.message, result.success);
+        refreshAllData();
+    }
+
+    function showDeleteMessage(message, success) {
+        var el = document.getElementById('deleteMessage');
+        el.textContent = message;
+        el.style.display = 'block';
+        el.style.color = success ? 'var(--green)' : 'var(--red)';
+        setTimeout(function() {
+            el.style.display = 'none';
+        }, 4000);
+    }
+
+    function refreshAllData() {
+        loadStatsSummary();
+        loadToday();
+        loadTomorrow();
+        loadAllBookings();
+        loadCalendar();
+        loadMasterCalendar();
+        loadStats();
+        loadRevenue();
+    }
+
+    // ========================================
+    // ВЫХОД ИЗ АДМИН-ПАНЕЛИ
+    // ========================================
+    function logout() {
+        if (!confirm('Вы уверены, что хотите выйти?')) return;
+        
+        fetch('/api/logout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(result) {
+            if (result.success) {
+                window.location.href = '/';
+            } else {
+                alert('Ошибка выхода');
+            }
+        })
+        .catch(function(error) {
+            console.error('Ошибка:', error);
+            alert('Ошибка соединения');
+        });
+    }
+
+    // ========================================
+    // ИНИЦИАЛИЗАЦИЯ
+    // ========================================
+    async function loadAdminServicesAndMasters() {
+        var srvs = await fetchData('/api/admin/services');
+        var msts = await fetchData('/api/admin/masters');
+
+        
+        var srvListEl = document.getElementById('servicesManagerList');
+        if (srvListEl && srvs) {
+            var html = '';
+            srvs.forEach(function(s) {
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px; border-bottom:1px solid var(--border-light);">
+                    <div><strong>${s.name}</strong> — ${s.price} (${s.duration})</div>
+                    <button class="btn btn-danger btn-sm" onclick="deleteAdminService('${s.id}')">Удалить</button>
+                </div>`;
+            });
+            srvListEl.innerHTML = html || '<div class="empty-state">Нет услуг</div>';
+        }
+        
+        var mstListEl = document.getElementById('mastersManagerList');
+        if (mstListEl && msts) {
+            var html = '';
+            msts.forEach(function(m) {
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px; border-bottom:1px solid var(--border-light);">
+                    <div><strong>${m.name}</strong> (${m.experience})</div>
+                    <button class="btn btn-danger btn-sm" onclick="deleteAdminMaster('${m.id}')">Удалить</button>
+                </div>`;
+            });
+            mstListEl.innerHTML = html || '<div class="empty-state">Нет мастеров</div>';
+        }
+
+        var qbS = document.getElementById('qbService');
+        var qbM = document.getElementById('qbMaster');
+        if (qbS && srvs) {
+            qbS.innerHTML = srvs.map(s => `<option value="${s.name}">${s.name} (${s.price})</option>`).join('');
+        }
+        if (qbM && msts) {
+            qbM.innerHTML = msts.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
+        }
+    }
+
+    async function saveAdminService() {
+        var name = document.getElementById('srvName').value.trim();
+        var priceNum = parseInt(document.getElementById('srvPrice').value);
+        var duration = document.getElementById('srvDuration').value.trim();
+        if (!name || !priceNum) { alert('Заполните название и цену'); return; }
+        
+        var data = {
+            name: name,
+            price: priceNum + ' ₽',
+            price_num: priceNum,
+            duration: duration || '60 мин',
+            duration_minutes: 60
+        };
+        await postData('/api/admin/services', data);
+        document.getElementById('srvName').value = '';
+        document.getElementById('srvPrice').value = '';
+        document.getElementById('srvDuration').value = '';
+        loadAdminServicesAndMasters();
+    }
+
+    async function deleteAdminService(id) {
+        if (!confirm('Удалить услугу?')) return;
+        await fetch('/api/admin/services?id=' + id, { method: 'DELETE' });
+        loadAdminServicesAndMasters();
+    }
+
+    async function saveAdminMaster() {
+        var name = document.getElementById('mstName').value.trim();
+        var exp = document.getElementById('mstExp').value.trim();
+        if (!name) { alert('Заполните имя мастера'); return; }
+        
+        var data = {
+            name: name,
+            experience: exp || '5 лет'
+        };
+        await postData('/api/admin/masters', data);
+        document.getElementById('mstName').value = '';
+        document.getElementById('mstExp').value = '';
+        loadAdminServicesAndMasters();
+    }
+
+    async function deleteAdminMaster(id) {
+        if (!confirm('Удалить мастера?')) return;
+        await fetch('/api/admin/masters?id=' + id, { method: 'DELETE' });
+        loadAdminServicesAndMasters();
+    }
+
+    async function loadAdminPromos() {
+        var promos = await fetchData('/api/admin/promos');
+        var el = document.getElementById('promosManagerList');
+        if (!el) return;
+        if (!promos || promos.length === 0) {
+            el.innerHTML = '<div class="empty-state">Нет активных промокодов</div>';
+            return;
+        }
+        var html = '';
+        promos.forEach(function(p) {
+            var valText = p.discount_type === 'percent' ? p.discount_value + '%' : p.discount_value + ' ₽';
+            html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--surface); border:1px solid var(--border-light); border-radius:6px; margin-bottom:8px;">
+                <div><strong>${p.code}</strong> — скидка ${valText}</div>
+                <button class="btn btn-danger btn-sm" onclick="deleteAdminPromo('${p.code}')">Удалить</button>
+            </div>`;
+        });
+        el.innerHTML = html;
+    }
+
+    async function saveAdminPromo() {
+        var code = document.getElementById('prmCode').value.trim().toUpperCase();
+        var type = document.getElementById('prmType').value;
+        var val = parseFloat(document.getElementById('prmVal').value);
+        if (!code || !val) { alert('Заполните код и значение'); return; }
+        
+        await postData('/api/admin/promos', {
+            code: code,
+            discount_type: type,
+            discount_value: val,
+            active: true
+        });
+        document.getElementById('prmCode').value = '';
+        document.getElementById('prmVal').value = '';
+        loadAdminPromos();
+    }
+
+    async function deleteAdminPromo(code) {
+        if (!confirm('Удалить промокод ' + code + '?')) return;
+        await fetch('/api/admin/promos?code=' + code, { method: 'DELETE' });
+        loadAdminPromos();
+    }
+
+    async function loadAdminReviews() {
+        var res = await fetchData('/api/reviews/list');
+        var el = document.getElementById('reviewsManagerList');
+        if (!el) return;
+        var reviews = res ? res.reviews : [];
+        if (!reviews || reviews.length === 0) {
+            el.innerHTML = '<div class="empty-state">Пока нет отзывов</div>';
+            return;
+        }
+        var html = '';
+        reviews.forEach(function(r) {
+            var stars = '★'.repeat(r.rating || 5);
+            html += `<div style="padding:12px; background:var(--surface); border:1px solid var(--border-light); border-radius:6px; margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between;">
+                    <strong>${r.client_name} (для мастера ${r.master})</strong>
+                    <span style="color:#F59E0B;">${stars} (${r.rating}/5)</span>
+                </div>
+                <p style="font-size:0.85rem; margin-top:6px; color:var(--text-secondary);">${r.comment}</p>
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">${r.date}</div>
+            </div>`;
+        });
+        el.innerHTML = html;
+    }
+
+    async function submitQuickBook() {
+        var name = document.getElementById('qbName').value.trim();
+        var phone = document.getElementById('qbPhone').value.trim();
+        var service = document.getElementById('qbService').value;
+        var master = document.getElementById('qbMaster').value;
+        var date = document.getElementById('qbDate').value;
+        var time = document.getElementById('qbTime').value;
+        var statusEl = document.getElementById('qbStatus');
+        
+        if (!name || !phone || !date || !time) {
+            statusEl.style.color = 'var(--red)';
+            statusEl.textContent = 'Заполните имя, телефон, дату и время';
+            return;
+        }
+        
+        var data = { name: name, phone: phone, service: service, master: master, date: date, time: time };
+        var res = await postData('/api/admin/quick_book', data);
+        if (res && res.success) {
+            statusEl.style.color = 'var(--green)';
+            statusEl.textContent = 'Запись успешно создана (ID #' + res.id + ')!';
+            document.getElementById('qbName').value = '';
+            document.getElementById('qbPhone').value = '';
+        } else {
+            statusEl.style.color = 'var(--red)';
+            statusEl.textContent = (res ? res.message : 'Ошибка создания записи');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadStatsSummary();
+        loadToday();
+        loadTomorrow();
+        loadAllBookings();
+        loadCalendar();
+        loadMastersForSelect();
+        loadStats();
+        loadRevenue();
+        loadAdminServicesAndMasters();
+    });
+
+</script>
+
+</body>
+</html>
